@@ -99,11 +99,11 @@
 
 .event-dot.deliverable {
   background-color: transparent;
-  border: 2px solid #d32f2f;
+  border: 2px solid var(--course-color, #d32f2f);
 }
 
 .event-dot.exam {
-  background-color: #1976d2;
+  background-color: var(--course-color, #1976d2);
 }
 
 .event-dot.presentation {
