@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { generateCalendarData, formatDateForDB, type MonthData, type DayInfo } from '../lib/dates'
 import type { Course, CalendarEvent } from '../types/database'
 import './Calendar.css'
@@ -15,6 +16,7 @@ interface MonthColumnProps {
   events: CalendarEvent[]
   courses: Course[]
   activeCourseIds: Set<string>
+  todayStr: string
   onDayClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
 }
@@ -22,20 +24,21 @@ interface MonthColumnProps {
 interface DayRowProps {
   day: DayInfo
   isOddWeek: boolean
+  isToday: boolean
   events: CalendarEvent[]
   courses: Course[]
   onDayClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
 }
 
-function MonthColumn({ month, events, courses, activeCourseIds, onDayClick, onEventClick }: MonthColumnProps) {
+function MonthColumn({ month, events, courses, activeCourseIds, todayStr, onDayClick, onEventClick }: MonthColumnProps) {
   let currentWeek = -1
   let weekIndex = 0
 
   // Filter events for this month and active courses
   const monthEvents = events.filter(e => {
     const eventDate = new Date(e.date)
-    const inMonth = eventDate.getFullYear() === month.year && eventDate.getMonth() === (new Date(`${month.name} 1, ${month.year}`).getMonth())
+    const inMonth = eventDate.getFullYear() === month.year && eventDate.getMonth() === month.month
     const isHoliday = e.type === 'holiday'
     const courseActive = e.course_id ? activeCourseIds.has(e.course_id) : true
     return inMonth && (isHoliday || courseActive)
@@ -54,13 +57,25 @@ function MonthColumn({ month, events, courses, activeCourseIds, onDayClick, onEv
           }
           const isOddWeek = weekIndex % 2 === 1
           const dayDateStr = formatDateForDB(day.date)
-          const dayEvents = monthEvents.filter(e => e.date === dayDateStr)
+          // Sort events: holiday > lecture > presentation > exam > deliverable
+          const eventTypeOrder: Record<string, number> = {
+            holiday: 0,
+            lecture: 1,
+            presentation: 2,
+            exam: 3,
+            deliverable: 4
+          }
+          const dayEvents = monthEvents
+            .filter(e => e.date === dayDateStr)
+            .sort((a, b) => (eventTypeOrder[a.type] ?? 5) - (eventTypeOrder[b.type] ?? 5))
+          const isToday = dayDateStr === todayStr
 
           return (
             <DayRow
               key={day.day}
               day={day}
               isOddWeek={isOddWeek}
+              isToday={isToday}
               events={dayEvents}
               courses={courses}
               onDayClick={onDayClick}
@@ -73,7 +88,7 @@ function MonthColumn({ month, events, courses, activeCourseIds, onDayClick, onEv
   )
 }
 
-function DayRow({ day, isOddWeek, events, courses, onDayClick, onEventClick }: DayRowProps) {
+function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventClick }: DayRowProps) {
   const getCourseColor = (courseId: string | null) => {
     if (!courseId) return '#666'
     const course = courses.find(c => c.id === courseId)
@@ -86,9 +101,13 @@ function DayRow({ day, isOddWeek, events, courses, onDayClick, onEventClick }: D
     onDayClick?.(day.date)
   }
 
+  const classes = ['day-row']
+  if (isOddWeek) classes.push('odd-week')
+  if (isToday) classes.push('today')
+
   return (
     <div
-      className={`day-row ${isOddWeek ? 'odd-week' : ''}`}
+      className={classes.join(' ')}
       onClick={handleDayClick}
     >
       <span className="day-weekday">{day.weekday}</span>
@@ -97,7 +116,8 @@ function DayRow({ day, isOddWeek, events, courses, onDayClick, onEventClick }: D
         {events.map((event) => (
           <div
             key={event.id}
-            className="event-item"
+            className={`event-item ${event.notes ? 'has-notes' : ''}`}
+            title={event.notes || undefined}
             onClick={(e) => {
               e.stopPropagation()
               onEventClick?.(event)
@@ -120,6 +140,20 @@ function DayRow({ day, isOddWeek, events, courses, onDayClick, onEventClick }: D
 
 export function Calendar({ events, courses, activeCourseIds, onDayClick, onEventClick }: CalendarProps) {
   const months = generateCalendarData()
+  const [todayStr, setTodayStr] = useState(() => formatDateForDB(new Date()))
+
+  // Update today marker at midnight
+  useEffect(() => {
+    const now = new Date()
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1)
+    const msUntilMidnight = tomorrow.getTime() - now.getTime()
+
+    const timeout = setTimeout(() => {
+      setTodayStr(formatDateForDB(new Date()))
+    }, msUntilMidnight)
+
+    return () => clearTimeout(timeout)
+  }, [todayStr])
 
   return (
     <div className="calendar">
@@ -131,6 +165,7 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
             events={events}
             courses={courses}
             activeCourseIds={activeCourseIds}
+            todayStr={todayStr}
             onDayClick={onDayClick}
             onEventClick={onEventClick}
           />

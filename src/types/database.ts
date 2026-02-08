@@ -5,6 +5,7 @@ export interface Course {
   name: string
   color: string
   active: boolean
+  sort_order: number
   created_at: string
 }
 
@@ -14,5 +15,6 @@ export interface CalendarEvent {
   title: string
   date: string
   type: EventType
+  notes: string | null
   created_at: string
 }

@@ -34,6 +34,7 @@ export function EventModal({
   const [date, setDate] = useState('')
   const [type, setType] = useState<EventType>('lecture')
   const [courseId, setCourseId] = useState<string>('')
+  const [notes, setNotes] = useState('')
 
   useEffect(() => {
     if (editingEvent) {
@@ -41,11 +42,13 @@ export function EventModal({
       setDate(editingEvent.date)
       setType(editingEvent.type)
       setCourseId(editingEvent.course_id || '')
+      setNotes(editingEvent.notes || '')
     } else if (initialDate) {
       setTitle('')
       setDate(formatDateForDB(initialDate))
       setType('lecture')
       setCourseId(courses[0]?.id || '')
+      setNotes('')
     }
   }, [editingEvent, initialDate, courses])
 
@@ -59,7 +62,8 @@ export function EventModal({
       title: title.trim(),
       date,
       type,
-      course_id: type === 'holiday' ? null : (courseId || null)
+      course_id: type === 'holiday' ? null : (courseId || null),
+      notes: notes.trim() || null
     })
     onClose()
   }
@@ -116,6 +120,16 @@ export function EventModal({
               </select>
             </div>
           )}
+
+          <div className="form-group">
+            <label>Notes</label>
+            <textarea
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Optional notes..."
+              rows={3}
+            />
+          </div>
 
           <div className="modal-actions">
             {editingEvent && onDelete && (

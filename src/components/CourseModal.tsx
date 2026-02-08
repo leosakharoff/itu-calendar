@@ -44,7 +44,8 @@ export function CourseModal({
     onSave({
       name: name.trim(),
       color,
-      active: true
+      active: true,
+      sort_order: editingCourse?.sort_order ?? 999
     })
     onClose()
   }

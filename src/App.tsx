@@ -11,7 +11,7 @@ function App() {
   const {
     courses, events, loading, error,
     addEvent, updateEvent, deleteEvent,
-    addCourse, updateCourse, deleteCourse
+    addCourse, updateCourse, deleteCourse, reorderCourses
   } = useCalendarData()
 
   const [activeCourseIds, setActiveCourseIds] = useState<Set<string>>(new Set())
@@ -128,6 +128,7 @@ function App() {
         onToggle={toggleCourse}
         onAddCourse={handleAddCourse}
         onEditCourse={handleEditCourse}
+        onReorderCourses={reorderCourses}
       />
       <Calendar
         events={events}

@@ -14,7 +14,7 @@ export function useCalendarData() {
       setError(null)
 
       const [coursesRes, eventsRes] = await Promise.all([
-        supabase.from('courses').select('*').order('name'),
+        supabase.from('courses').select('*').order('sort_order'),
         supabase.from('events').select('*').order('date')
       ])
 
@@ -70,6 +70,27 @@ export function useCalendarData() {
     setCourses(prev => prev.filter(c => c.id !== id))
   }
 
+  const reorderCourses = async (reorderedCourses: Course[]) => {
+    // Optimistically update local state
+    setCourses(reorderedCourses)
+
+    // Update sort_order in database
+    const updates = reorderedCourses.map((course, index) =>
+      supabase
+        .from('courses')
+        .update({ sort_order: index })
+        .eq('id', course.id)
+    )
+
+    const results = await Promise.all(updates)
+    const hasError = results.some(r => r.error)
+    if (hasError) {
+      // Revert on error
+      await fetchData()
+      throw new Error('Failed to reorder courses')
+    }
+  }
+
   // Event mutations
   const addEvent = async (event: Omit<CalendarEvent, 'id' | 'created_at'>) => {
     const { data, error } = await supabase
@@ -115,6 +136,7 @@ export function useCalendarData() {
     addCourse,
     updateCourse,
     deleteCourse,
+    reorderCourses,
     addEvent,
     updateEvent,
     deleteEvent
