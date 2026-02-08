@@ -1,0 +1,60 @@
+.course-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid #ccc;
+  font-size: 13px;
+}
+
+.filter-label {
+  font-weight: 500;
+  color: #666;
+}
+
+.filter-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.filter-item input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.course-name {
+  color: #333;
+  cursor: pointer;
+}
+
+.course-name:hover {
+  text-decoration: underline;
+}
+
+.add-course-btn {
+  background: none;
+  border: 1px dashed #999;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #666;
+}
+
+.add-course-btn:hover {
+  border-color: #666;
+  color: #333;
+}

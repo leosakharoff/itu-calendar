@@ -1,0 +1,131 @@
+.calendar {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0;
+  border-top: 1px solid #000;
+  border-left: 1px solid #000;
+}
+
+.month-column {
+  border-right: 1px solid #000;
+  border-bottom: 1px solid #000;
+}
+
+.month-header {
+  font-weight: 400;
+  font-size: 13px;
+  padding: 6px 8px;
+  background: #fff;
+  text-align: center;
+  border-bottom: 1px solid #000;
+}
+
+.month-days {
+  display: flex;
+  flex-direction: column;
+}
+
+.day-row {
+  display: flex;
+  align-items: center;
+  padding: 1px 6px;
+  min-height: 20px;
+  font-size: 12px;
+  position: relative;
+  background: #fff;
+  cursor: pointer;
+}
+
+.day-row:hover {
+  background-color: #f5f5f5;
+}
+
+.day-row.odd-week:hover {
+  background-color: #ddd;
+}
+
+.day-row.odd-week {
+  background-color: #e8e8e8;
+}
+
+.day-weekday {
+  width: 12px;
+  color: #000;
+  font-size: 11px;
+}
+
+.day-number {
+  width: 18px;
+  text-align: right;
+  margin-right: 6px;
+  color: #000;
+}
+
+.day-events {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  font-size: 11px;
+}
+
+.week-number {
+  position: absolute;
+  right: 4px;
+  font-size: 10px;
+  color: #000;
+  font-weight: 400;
+}
+
+/* Event markers */
+.event-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.event-dot.lecture {
+  background-color: var(--course-color, #4CAF50);
+}
+
+.event-dot.deliverable {
+  background-color: transparent;
+  border: 2px solid #d32f2f;
+}
+
+.event-dot.exam {
+  background-color: #1976d2;
+}
+
+.event-dot.presentation {
+  background-color: transparent;
+  border: 2px solid var(--course-color, #4CAF50);
+}
+
+.event-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  padding: 1px 3px;
+  border-radius: 2px;
+}
+
+.event-item:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.event-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
