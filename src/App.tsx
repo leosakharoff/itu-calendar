@@ -40,6 +40,17 @@ function App() {
     })
   }
 
+  const soloCourse = (courseId: string) => {
+    setActiveCourseIds(prev => {
+      // If already soloed (only this course active), show all courses
+      if (prev.size === 1 && prev.has(courseId)) {
+        return new Set(courses.map(c => c.id))
+      }
+      // Otherwise, solo this course
+      return new Set([courseId])
+    })
+  }
+
   const handleDayClick = (date: Date) => {
     setSelectedDate(date)
     setEditingEvent(null)
@@ -126,6 +137,7 @@ function App() {
         courses={courses}
         activeCourseIds={activeCourseIds}
         onToggle={toggleCourse}
+        onSolo={soloCourse}
         onAddCourse={handleAddCourse}
         onEditCourse={handleEditCourse}
         onReorderCourses={reorderCourses}

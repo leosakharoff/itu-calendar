@@ -6,12 +6,13 @@ interface CourseFilterProps {
   courses: Course[]
   activeCourseIds: Set<string>
   onToggle: (courseId: string) => void
+  onSolo: (courseId: string) => void
   onAddCourse: () => void
   onEditCourse: (course: Course) => void
   onReorderCourses: (courses: Course[]) => void
 }
 
-export function CourseFilter({ courses, activeCourseIds, onToggle, onAddCourse, onEditCourse, onReorderCourses }: CourseFilterProps) {
+export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses }: CourseFilterProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const dragOverId = useRef<string | null>(null)
 
@@ -53,6 +54,7 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onAddCourse, 
             onDragStart={(e) => handleDragStart(e, course.id)}
             onDragOver={(e) => handleDragOver(e, course.id)}
             onDragEnd={handleDragEnd}
+            onDoubleClick={() => onSolo(course.id)}
           >
             <span className="drag-handle">⋮⋮</span>
             <input
