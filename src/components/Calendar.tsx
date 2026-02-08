@@ -117,7 +117,7 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
           <div
             key={event.id}
             className={`event-item ${event.notes ? 'has-notes' : ''}`}
-            title={event.notes || undefined}
+            title={event.notes ? `${event.title}\n${event.notes}` : event.title}
             onClick={(e) => {
               e.stopPropagation()
               onEventClick?.(event)
