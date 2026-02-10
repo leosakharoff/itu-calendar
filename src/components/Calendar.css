@@ -151,16 +151,6 @@
   min-width: 0;
 }
 
-.event-item:hover .event-label {
-  overflow: visible;
-  position: absolute;
-  left: 14px;
-  z-index: 10;
-  background: #fff;
-  padding: 1px 4px;
-  box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-  border-radius: 2px;
-}
 
 .event-item {
   position: relative;
