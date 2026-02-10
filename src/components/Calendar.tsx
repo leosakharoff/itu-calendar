@@ -9,6 +9,7 @@ interface CalendarProps {
   activeCourseIds: Set<string>
   onDayClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
+  onEventMove?: (eventId: string, newDate: string) => void
 }
 
 interface MonthColumnProps {
@@ -19,6 +20,7 @@ interface MonthColumnProps {
   todayStr: string
   onDayClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
+  onEventMove?: (eventId: string, newDate: string) => void
 }
 
 interface DayRowProps {
@@ -29,9 +31,10 @@ interface DayRowProps {
   courses: Course[]
   onDayClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
+  onEventMove?: (eventId: string, newDate: string) => void
 }
 
-function MonthColumn({ month, events, courses, activeCourseIds, todayStr, onDayClick, onEventClick }: MonthColumnProps) {
+function MonthColumn({ month, events, courses, activeCourseIds, todayStr, onDayClick, onEventClick, onEventMove }: MonthColumnProps) {
   let currentWeek = -1
   let weekIndex = 0
 
@@ -80,6 +83,7 @@ function MonthColumn({ month, events, courses, activeCourseIds, todayStr, onDayC
               courses={courses}
               onDayClick={onDayClick}
               onEventClick={onEventClick}
+              onEventMove={onEventMove}
             />
           )
         })}
@@ -88,7 +92,9 @@ function MonthColumn({ month, events, courses, activeCourseIds, todayStr, onDayC
   )
 }
 
-function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventClick }: DayRowProps) {
+function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventClick, onEventMove }: DayRowProps) {
+  const [isDragOver, setIsDragOver] = useState(false)
+
   const getCourseColor = (courseId: string | null) => {
     if (!courseId) return '#666'
     const course = courses.find(c => c.id === courseId)
@@ -101,14 +107,42 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
     onDayClick?.(day.date)
   }
 
+  const handleDragStart = (e: React.DragEvent, event: CalendarEvent) => {
+    e.dataTransfer.setData('text/plain', event.id)
+    e.dataTransfer.effectAllowed = 'move'
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setIsDragOver(true)
+  }
+
+  const handleDragLeave = () => {
+    setIsDragOver(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragOver(false)
+    const eventId = e.dataTransfer.getData('text/plain')
+    if (eventId && onEventMove) {
+      onEventMove(eventId, formatDateForDB(day.date))
+    }
+  }
+
   const classes = ['day-row']
   if (isOddWeek) classes.push('odd-week')
   if (isToday) classes.push('today')
+  if (isDragOver) classes.push('drag-over')
 
   return (
     <div
       className={classes.join(' ')}
       onClick={handleDayClick}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
     >
       <span className="day-weekday">{day.weekday}</span>
       <span className="day-number">{day.day}</span>
@@ -118,6 +152,8 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
             key={event.id}
             className={`event-item ${event.notes ? 'has-notes' : ''}`}
             title={event.notes ? `${event.title}\n${event.notes}` : event.title}
+            draggable
+            onDragStart={(e) => handleDragStart(e, event)}
             onClick={(e) => {
               e.stopPropagation()
               onEventClick?.(event)
@@ -138,7 +174,7 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
   )
 }
 
-export function Calendar({ events, courses, activeCourseIds, onDayClick, onEventClick }: CalendarProps) {
+export function Calendar({ events, courses, activeCourseIds, onDayClick, onEventClick, onEventMove }: CalendarProps) {
   const months = generateCalendarData()
   const [todayStr, setTodayStr] = useState(() => formatDateForDB(new Date()))
 
@@ -168,6 +204,7 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
             todayStr={todayStr}
             onDayClick={onDayClick}
             onEventClick={onEventClick}
+            onEventMove={onEventMove}
           />
         ))}
       </div>

@@ -86,6 +86,17 @@ function App() {
     }
   }
 
+  const handleEventMove = async (eventId: string, newDate: string) => {
+    const event = events.find(e => e.id === eventId)
+    if (event) {
+      try {
+        await updateEvent(eventId, { ...event, date: newDate })
+      } catch (err) {
+        console.error('Failed to move event:', err)
+      }
+    }
+  }
+
   const handleAddCourse = () => {
     setEditingCourse(null)
     setCourseModalOpen(true)
@@ -150,6 +161,7 @@ function App() {
         activeCourseIds={activeCourseIds}
         onDayClick={handleDayClick}
         onEventClick={handleEventClick}
+        onEventMove={handleEventMove}
       />
       <EventModal
         isOpen={eventModalOpen}
