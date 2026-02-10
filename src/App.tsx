@@ -3,6 +3,7 @@ import { Calendar } from './components/Calendar'
 import { CourseFilter } from './components/CourseFilter'
 import { EventModal } from './components/EventModal'
 import { CourseModal } from './components/CourseModal'
+import { OfflineIndicator } from './components/OfflineIndicator'
 import { useCalendarData } from './hooks/useCalendarData'
 import type { CalendarEvent, Course } from './types/database'
 import './App.css'
@@ -133,6 +134,7 @@ function App() {
 
   return (
     <div className="app">
+      <OfflineIndicator />
       <CourseFilter
         courses={courses}
         activeCourseIds={activeCourseIds}
