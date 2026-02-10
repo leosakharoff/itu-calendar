@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'icons/*.svg'],
       manifest: {
-        name: 'MyITU Calendar',
-        short_name: 'MyITU',
+        name: 'My ITU Calendar',
+        short_name: 'My ITU',
         description: 'ITU course calendar application',
         theme_color: '#4a9eff',
         background_color: '#242424',
