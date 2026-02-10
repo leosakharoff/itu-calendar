@@ -4,16 +4,19 @@ import { CourseFilter } from './components/CourseFilter'
 import { EventModal } from './components/EventModal'
 import { CourseModal } from './components/CourseModal'
 import { OfflineIndicator } from './components/OfflineIndicator'
+import { LoginPage } from './components/LoginPage'
 import { useCalendarData } from './hooks/useCalendarData'
+import { useAuthContext } from './contexts/AuthContext'
 import type { CalendarEvent, Course } from './types/database'
 import './App.css'
 
 function App() {
+  const { user, loading: authLoading, signOut } = useAuthContext()
   const {
     courses, events, loading, error,
     addEvent, updateEvent, deleteEvent,
     addCourse, updateCourse, deleteCourse, reorderCourses
-  } = useCalendarData()
+  } = useCalendarData(user?.id)
 
   const [activeCourseIds, setActiveCourseIds] = useState<Set<string>>(new Set())
   const [eventModalOpen, setEventModalOpen] = useState(false)
@@ -135,8 +138,16 @@ function App() {
     }
   }
 
-  if (loading) {
+  if (authLoading) {
     return <div className="app loading">Loading...</div>
+  }
+
+  if (!user) {
+    return <LoginPage />
+  }
+
+  if (loading) {
+    return <div className="app loading">Loading calendar...</div>
   }
 
   if (error) {
@@ -154,6 +165,8 @@ function App() {
         onAddCourse={handleAddCourse}
         onEditCourse={handleEditCourse}
         onReorderCourses={reorderCourses}
+        onSignOut={signOut}
+        userEmail={user?.email}
       />
       <Calendar
         events={events}

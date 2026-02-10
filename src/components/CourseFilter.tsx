@@ -10,9 +10,11 @@ interface CourseFilterProps {
   onAddCourse: () => void
   onEditCourse: (course: Course) => void
   onReorderCourses: (courses: Course[]) => void
+  onSignOut?: () => void
+  userEmail?: string
 }
 
-export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses }: CourseFilterProps) {
+export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onSignOut, userEmail }: CourseFilterProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const dragOverId = useRef<string | null>(null)
 
@@ -81,6 +83,14 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
           + Add Course
         </button>
       </div>
+      {onSignOut && (
+        <div className="user-section">
+          {userEmail && <span className="user-email">{userEmail}</span>}
+          <button className="sign-out-btn" onClick={onSignOut}>
+            Sign out
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Course, CalendarEvent } from '../types/database'
 
-export function useCalendarData() {
+export function useCalendarData(userId?: string) {
   const [courses, setCourses] = useState<Course[]>([])
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -38,7 +38,7 @@ export function useCalendarData() {
   const addCourse = async (course: Omit<Course, 'id' | 'created_at'>) => {
     const { data, error } = await supabase
       .from('courses')
-      .insert(course)
+      .insert({ ...course, user_id: userId })
       .select()
       .single()
 
@@ -95,7 +95,7 @@ export function useCalendarData() {
   const addEvent = async (event: Omit<CalendarEvent, 'id' | 'created_at'>) => {
     const { data, error } = await supabase
       .from('events')
-      .insert(event)
+      .insert({ ...event, user_id: userId })
       .select()
       .single()
 
