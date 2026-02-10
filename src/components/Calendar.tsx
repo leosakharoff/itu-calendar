@@ -1,7 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, createContext, useContext } from 'react'
 import { generateCalendarData, formatDateForDB, type MonthData, type DayInfo } from '../lib/dates'
 import type { Course, CalendarEvent } from '../types/database'
 import './Calendar.css'
+
+// Context for touch drag state
+interface TouchDragContextType {
+  draggingEventId: string | null
+  setDraggingEventId: (id: string | null) => void
+  dropTargetDate: string | null
+  setDropTargetDate: (date: string | null) => void
+}
+
+const TouchDragContext = createContext<TouchDragContextType>({
+  draggingEventId: null,
+  setDraggingEventId: () => {},
+  dropTargetDate: null,
+  setDropTargetDate: () => {},
+})
 
 interface CalendarProps {
   events: CalendarEvent[]
@@ -94,6 +109,9 @@ function MonthColumn({ month, events, courses, activeCourseIds, todayStr, onDayC
 
 function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventClick, onEventMove }: DayRowProps) {
   const [isDragOver, setIsDragOver] = useState(false)
+  const { draggingEventId, setDraggingEventId, dropTargetDate, setDropTargetDate } = useContext(TouchDragContext)
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
+  const longPressTimerRef = useRef<number | null>(null)
 
   const getCourseColor = (courseId: string | null) => {
     if (!courseId) return '#666'
@@ -131,14 +149,78 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
     }
   }
 
+  // Touch event handlers for mobile drag
+  const handleTouchStart = (e: React.TouchEvent, event: CalendarEvent) => {
+    const touch = e.touches[0]
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() }
+
+    // Start long press timer (300ms)
+    longPressTimerRef.current = window.setTimeout(() => {
+      setDraggingEventId(event.id)
+      // Vibrate on supported devices
+      if (navigator.vibrate) navigator.vibrate(50)
+    }, 300)
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    // Cancel long press if moved too much before timer fires
+    if (touchStartRef.current && longPressTimerRef.current) {
+      const touch = e.touches[0]
+      const dx = Math.abs(touch.clientX - touchStartRef.current.x)
+      const dy = Math.abs(touch.clientY - touchStartRef.current.y)
+      if (dx > 10 || dy > 10) {
+        clearTimeout(longPressTimerRef.current)
+        longPressTimerRef.current = null
+      }
+    }
+
+    // If dragging, find the day row under the touch point
+    if (draggingEventId) {
+      e.preventDefault()
+      const touch = e.touches[0]
+      const element = document.elementFromPoint(touch.clientX, touch.clientY)
+      const dayRow = element?.closest('.day-row') as HTMLElement | null
+      if (dayRow) {
+        const dateStr = dayRow.dataset.date
+        if (dateStr) {
+          setDropTargetDate(dateStr)
+        }
+      } else {
+        setDropTargetDate(null)
+      }
+    }
+  }
+
+  const handleTouchEnd = () => {
+    // Clear long press timer
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+
+    // If we were dragging and have a drop target, move the event
+    if (draggingEventId && dropTargetDate && onEventMove) {
+      onEventMove(draggingEventId, dropTargetDate)
+    }
+
+    // Reset drag state
+    setDraggingEventId(null)
+    setDropTargetDate(null)
+    touchStartRef.current = null
+  }
+
+  const dayDateStr = formatDateForDB(day.date)
+  const isTouchDragOver = dropTargetDate === dayDateStr
+
   const classes = ['day-row']
   if (isOddWeek) classes.push('odd-week')
   if (isToday) classes.push('today')
-  if (isDragOver) classes.push('drag-over')
+  if (isDragOver || isTouchDragOver) classes.push('drag-over')
 
   return (
     <div
       className={classes.join(' ')}
+      data-date={dayDateStr}
       onClick={handleDayClick}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -150,13 +232,17 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
         {events.map((event) => (
           <div
             key={event.id}
-            className={`event-item ${event.notes ? 'has-notes' : ''}`}
+            className={`event-item ${event.notes ? 'has-notes' : ''} ${draggingEventId === event.id ? 'dragging' : ''}`}
             title={event.notes ? `${event.title}\n${event.notes}` : event.title}
             draggable
             onDragStart={(e) => handleDragStart(e, event)}
+            onTouchStart={(e) => handleTouchStart(e, event)}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
             onClick={(e) => {
               e.stopPropagation()
-              onEventClick?.(event)
+              // Don't open modal if we just finished dragging
+              if (!draggingEventId) onEventClick?.(event)
             }}
           >
             <span
@@ -177,6 +263,8 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
 export function Calendar({ events, courses, activeCourseIds, onDayClick, onEventClick, onEventMove }: CalendarProps) {
   const months = generateCalendarData()
   const [todayStr, setTodayStr] = useState(() => formatDateForDB(new Date()))
+  const [draggingEventId, setDraggingEventId] = useState<string | null>(null)
+  const [dropTargetDate, setDropTargetDate] = useState<string | null>(null)
 
   // Update today marker at midnight
   useEffect(() => {
@@ -192,22 +280,24 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
   }, [todayStr])
 
   return (
-    <div className="calendar">
-      <div className="calendar-grid">
-        {months.map((month) => (
-          <MonthColumn
-            key={month.name}
-            month={month}
-            events={events}
-            courses={courses}
-            activeCourseIds={activeCourseIds}
-            todayStr={todayStr}
-            onDayClick={onDayClick}
-            onEventClick={onEventClick}
-            onEventMove={onEventMove}
-          />
-        ))}
+    <TouchDragContext.Provider value={{ draggingEventId, setDraggingEventId, dropTargetDate, setDropTargetDate }}>
+      <div className={`calendar ${draggingEventId ? 'touch-dragging' : ''}`}>
+        <div className="calendar-grid">
+          {months.map((month) => (
+            <MonthColumn
+              key={month.name}
+              month={month}
+              events={events}
+              courses={courses}
+              activeCourseIds={activeCourseIds}
+              todayStr={todayStr}
+              onDayClick={onDayClick}
+              onEventClick={onEventClick}
+              onEventMove={onEventMove}
+            />
+          ))}
+        </div>
       </div>
-    </div>
+    </TouchDragContext.Provider>
   )
 }

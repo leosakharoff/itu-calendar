@@ -189,3 +189,18 @@
 .event-item[draggable="true"]:active {
   cursor: grabbing;
 }
+
+/* Touch dragging styles */
+.event-item.dragging {
+  opacity: 0.5;
+  background: #e3f2fd;
+}
+
+.calendar.touch-dragging {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.calendar.touch-dragging .day-row {
+  touch-action: none;
+}
