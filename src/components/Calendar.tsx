@@ -27,6 +27,7 @@ interface CalendarProps {
   onDayClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
   onEventMove?: (eventId: string, newDate: string) => void
+  onMonthPairChange?: (label: string) => void
 }
 
 interface MonthColumnProps {
@@ -297,7 +298,7 @@ function useIsPortraitMobile() {
   return isPortrait
 }
 
-export function Calendar({ events, courses, activeCourseIds, onDayClick, onEventClick, onEventMove }: CalendarProps) {
+export function Calendar({ events, courses, activeCourseIds, onDayClick, onEventClick, onEventMove, onMonthPairChange }: CalendarProps) {
   const months = generateCalendarData()
   const [todayStr, setTodayStr] = useState(() => formatDateForDB(new Date()))
   const [draggingEventId, setDraggingEventId] = useState<string | null>(null)
@@ -396,6 +397,12 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
   const pairLabel = isPortraitMobile
     ? `${MONTH_NAMES[startMonthIndex]} — ${MONTH_NAMES[startMonthIndex + 1]}`
     : ''
+
+  useEffect(() => {
+    if (isPortraitMobile && onMonthPairChange) {
+      onMonthPairChange(pairLabel)
+    }
+  }, [pairLabel, isPortraitMobile, onMonthPairChange])
 
   return (
     <TouchDragContext.Provider value={{ draggingEventId, setDraggingEventId, dropTargetDate, setDropTargetDate }}>

@@ -135,6 +135,13 @@
   line-height: 1;
 }
 
+.top-bar-month-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  letter-spacing: 0.2px;
+}
+
 /* ── Mobile top bar ── */
 .mobile-top-bar {
   position: sticky;

@@ -12,9 +12,10 @@ interface CourseFilterProps {
   onReorderCourses: (courses: Course[]) => void
   onOpenProfile: () => void
   userInitials: string
+  monthPairLabel?: string
 }
 
-export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onOpenProfile, userInitials }: CourseFilterProps) {
+export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onOpenProfile, userInitials, monthPairLabel }: CourseFilterProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const dragOverId = useRef<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -112,6 +113,9 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
               <rect y="13.5" width="22" height="2.5" rx="1" fill="currentColor" />
             </svg>
           </button>
+          {monthPairLabel && (
+            <span className="top-bar-month-label">{monthPairLabel}</span>
+          )}
           <button
             className="avatar-btn"
             onClick={onOpenProfile}

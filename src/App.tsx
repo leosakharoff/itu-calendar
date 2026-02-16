@@ -38,6 +38,7 @@ function MainApp() {
   const [eventModalOpen, setEventModalOpen] = useState(false)
   const [courseModalOpen, setCourseModalOpen] = useState(false)
   const [profileModalOpen, setProfileModalOpen] = useState(false)
+  const [monthPairLabel, setMonthPairLabel] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
@@ -197,6 +198,7 @@ function MainApp() {
         onReorderCourses={reorderCourses}
         onOpenProfile={() => setProfileModalOpen(true)}
         userInitials={user ? getInitials(user) : '?'}
+        monthPairLabel={monthPairLabel}
       />
       <Calendar
         events={events}
@@ -205,6 +207,7 @@ function MainApp() {
         onDayClick={handleDayClick}
         onEventClick={handleEventClick}
         onEventMove={handleEventMove}
+        onMonthPairChange={setMonthPairLabel}
       />
       <EventModal
         isOpen={eventModalOpen}
