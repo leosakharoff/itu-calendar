@@ -280,7 +280,7 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
           )
         })}
       </div>
-      {day.isLastDayOfWeek && (
+      {day.isFirstDayOfWeek && (
         <span className="week-number">{day.weekNumber}</span>
       )}
     </div>

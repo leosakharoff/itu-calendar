@@ -223,14 +223,6 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
               </svg>
               {isEn ? 'Notifications' : 'Notifikationer'}
             </button>
-            <button className="drawer-profile-btn" onClick={() => { closeDrawer(); onOpenProfile() }}>
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="" className="avatar-img-small" />
-              ) : (
-                <span className="avatar-initials-small">{userInitials}</span>
-              )}
-              {isEn ? 'Profile' : 'Profil'}
-            </button>
           </div>
         </div>
       </>

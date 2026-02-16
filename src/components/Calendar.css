@@ -110,7 +110,7 @@
 
 .week-number {
   position: absolute;
-  right: 4px;
+  left: 4px;
   font-size: 10px;
   color: var(--color-text-tertiary);
   font-weight: var(--font-weight-normal);

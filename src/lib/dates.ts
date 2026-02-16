@@ -36,6 +36,7 @@ export interface DayInfo {
   day: number
   weekday: string
   weekNumber: number
+  isFirstDayOfWeek: boolean
   isLastDayOfWeek: boolean
 }
 
@@ -70,8 +71,10 @@ export function generateMonthData(
     const date = new Date(year, month, day)
     const dayOfWeek = date.getDay()
 
-    // For monday-start: last day of week is Sunday (0)
-    // For sunday-start: last day of week is Saturday (6)
+    const isFirstDayOfWeek = weekStart === 'monday'
+      ? dayOfWeek === 1
+      : dayOfWeek === 0
+
     const isLastDayOfWeek = weekStart === 'monday'
       ? dayOfWeek === 0
       : dayOfWeek === 6
@@ -81,6 +84,7 @@ export function generateMonthData(
       day,
       weekday: weekdays[dayOfWeek],
       weekNumber: getWeekNumber(date),
+      isFirstDayOfWeek,
       isLastDayOfWeek
     })
   }
