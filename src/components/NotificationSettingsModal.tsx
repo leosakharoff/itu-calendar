@@ -17,6 +17,7 @@ const EVENT_TYPE_LABELS: Record<EventType, { da: string; en: string }> = {
 interface NotificationSettingsModalProps {
   isOpen: boolean
   onClose: () => void
+  onBack: () => void
   settings: NotificationSettings | null
   onUpdate: (partial: Partial<Omit<NotificationSettings, 'id' | 'user_id' | 'created_at'>>) => void
   onTestWebhook: () => Promise<{ ok: boolean; error?: string }>
@@ -25,7 +26,7 @@ interface NotificationSettingsModalProps {
   language?: Language
 }
 
-export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate, onTestWebhook, onTestEmail, userEmail, language = 'da' }: NotificationSettingsModalProps) {
+export function NotificationSettingsModal({ isOpen, onClose, onBack, settings, onUpdate, onTestWebhook, onTestEmail, userEmail, language = 'da' }: NotificationSettingsModalProps) {
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
   const [testResult, setTestResult] = useState<{ ok: boolean; error?: string } | null>(null)
   const [testing, setTesting] = useState(false)
@@ -66,7 +67,14 @@ export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate,
   return (
     <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
       <div ref={sheetRef} className="modal-content notification-settings-modal" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
-        <h3>{isEn ? 'Notifications' : 'Notifikationer'}</h3>
+        <div className="modal-header">
+          <button type="button" className="modal-back-btn" onClick={() => { onClose(); onBack() }} aria-label="Back">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="12 15 7 10 12 5" />
+            </svg>
+          </button>
+          <h3>{isEn ? 'Notifications' : 'Notifikationer'}</h3>
+        </div>
 
         {/* Discord section */}
         <div className="notification-section">

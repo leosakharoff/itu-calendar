@@ -304,6 +304,7 @@ function MainApp() {
           <CalendarSettingsModal
             isOpen={calendarSettingsOpen}
             onClose={() => setCalendarSettingsOpen(false)}
+            onBack={() => setSettingsModalOpen(true)}
             settings={settings}
             onUpdateSettings={updateSettings}
           />
@@ -324,6 +325,7 @@ function MainApp() {
       <NotificationSettingsModal
         isOpen={notificationSettingsOpen}
         onClose={() => setNotificationSettingsOpen(false)}
+        onBack={() => setSettingsModalOpen(true)}
         settings={notificationSettings}
         onUpdate={updateNotificationSettings}
         onTestWebhook={testDiscordWebhook}

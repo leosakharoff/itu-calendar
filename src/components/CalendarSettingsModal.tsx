@@ -16,11 +16,12 @@ const YEAR_OPTIONS = ['2025', '2026', '2027', '2028']
 interface CalendarSettingsModalProps {
   isOpen: boolean
   onClose: () => void
+  onBack: () => void
   settings: UserSettings
   onUpdateSettings: (partial: Partial<Pick<UserSettings, 'calendar_start' | 'calendar_end' | 'week_start' | 'language'>>) => void
 }
 
-export function CalendarSettingsModal({ isOpen, onClose, settings, onUpdateSettings }: CalendarSettingsModalProps) {
+export function CalendarSettingsModal({ isOpen, onClose, onBack, settings, onUpdateSettings }: CalendarSettingsModalProps) {
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
   if (!isOpen) return null
@@ -34,7 +35,14 @@ export function CalendarSettingsModal({ isOpen, onClose, settings, onUpdateSetti
   return (
     <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
       <div ref={sheetRef} className="modal-content settings-modal" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
-        <h3>{isEn ? 'Calendar' : 'Kalender'}</h3>
+        <div className="modal-header">
+          <button type="button" className="modal-back-btn" onClick={() => { onClose(); onBack() }} aria-label="Back">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="12 15 7 10 12 5" />
+            </svg>
+          </button>
+          <h3>{isEn ? 'Calendar' : 'Kalender'}</h3>
+        </div>
 
         <div className="settings-modal-row">
           <span className="settings-modal-label">{isEn ? 'From' : 'Fra'}</span>

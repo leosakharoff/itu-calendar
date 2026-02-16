@@ -46,6 +46,33 @@
   color: var(--color-text-primary);
 }
 
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-xl);
+}
+
+.modal-header h3 {
+  margin: 0;
+}
+
+.modal-back-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  display: flex;
+  align-items: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: color var(--transition-fast);
+}
+
+.modal-back-btn:hover {
+  color: var(--color-text-primary);
+}
+
 .form-group {
   margin-bottom: var(--space-lg);
 }
