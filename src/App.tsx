@@ -200,6 +200,7 @@ function MainApp() {
         onReorderCourses={reorderCourses}
         onOpenProfile={() => setProfileModalOpen(true)}
         userInitials={user ? getInitials(user) : '?'}
+        avatarUrl={user?.user_metadata?.avatar_url || undefined}
         monthPairLabel={monthPairLabel}
         settings={settings}
         onUpdateSettings={updateSettings}

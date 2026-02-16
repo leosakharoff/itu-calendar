@@ -23,12 +23,13 @@ interface CourseFilterProps {
   onReorderCourses: (courses: Course[]) => void
   onOpenProfile: () => void
   userInitials: string
+  avatarUrl?: string
   monthPairLabel?: string
   settings?: UserSettings | null
   onUpdateSettings?: (partial: Partial<Pick<UserSettings, 'calendar_start' | 'calendar_end' | 'week_start' | 'language'>>) => void
 }
 
-export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onOpenProfile, userInitials, monthPairLabel, settings, onUpdateSettings }: CourseFilterProps) {
+export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onOpenProfile, userInitials, avatarUrl, monthPairLabel, settings, onUpdateSettings }: CourseFilterProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const dragOverId = useRef<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -195,7 +196,11 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
             onClick={onOpenProfile}
             aria-label="Open profile"
           >
-            <span className="avatar-initials">{userInitials}</span>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="avatar-img" />
+            ) : (
+              <span className="avatar-initials">{userInitials}</span>
+            )}
           </button>
         </div>
 
@@ -223,7 +228,11 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
           </div>
           <div className="drawer-footer">
             <button className="drawer-profile-btn" onClick={() => { closeDrawer(); onOpenProfile() }}>
-              <span className="avatar-initials-small">{userInitials}</span>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="" className="avatar-img-small" />
+              ) : (
+                <span className="avatar-initials-small">{userInitials}</span>
+              )}
               {settings?.language === 'en' ? 'Profile settings' : 'Profilindstillinger'}
             </button>
           </div>
@@ -248,7 +257,11 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
           onClick={onOpenProfile}
           aria-label="Open profile"
         >
-          <span className="avatar-initials">{userInitials}</span>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="" className="avatar-img" />
+          ) : (
+            <span className="avatar-initials">{userInitials}</span>
+          )}
         </button>
       </div>
     </div>
