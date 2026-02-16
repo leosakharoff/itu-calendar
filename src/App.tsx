@@ -8,6 +8,7 @@ import { OfflineIndicator } from './components/OfflineIndicator'
 import { LoginPage } from './components/LoginPage'
 import { SubscribeView } from './components/SubscribeView'
 import { useCalendarData } from './hooks/useCalendarData'
+import { useSettings } from './hooks/useSettings'
 import { useAuthContext } from './contexts/AuthContext'
 import type { CalendarEvent, Course } from './types/database'
 import './App.css'
@@ -33,6 +34,7 @@ function MainApp() {
     getShareForCourse, createShare, toggleShare,
     subscribeToShareCopy, subscribeToShareLive, isEventSubscribed
   } = useCalendarData(user?.id)
+  const { settings, loading: settingsLoading, updateSettings } = useSettings(user?.id)
 
   const [activeCourseIds, setActiveCourseIds] = useState<Set<string>>(new Set())
   const [eventModalOpen, setEventModalOpen] = useState(false)
@@ -177,7 +179,7 @@ function MainApp() {
     return <LoginPage />
   }
 
-  if (loading && courses.length === 0) {
+  if ((loading && courses.length === 0) || settingsLoading) {
     return <div className="app loading">Loading calendar...</div>
   }
 
@@ -199,11 +201,17 @@ function MainApp() {
         onOpenProfile={() => setProfileModalOpen(true)}
         userInitials={user ? getInitials(user) : '?'}
         monthPairLabel={monthPairLabel}
+        settings={settings}
+        onUpdateSettings={updateSettings}
       />
       <Calendar
         events={events}
         courses={courses}
         activeCourseIds={activeCourseIds}
+        calendarStart={settings?.calendar_start}
+        calendarEnd={settings?.calendar_end}
+        weekStart={settings?.week_start}
+        language={settings?.language}
         onDayClick={handleDayClick}
         onEventClick={handleEventClick}
         onEventMove={handleEventMove}

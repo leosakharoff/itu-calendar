@@ -1,11 +1,35 @@
-// Danish weekday abbreviations
-const WEEKDAYS = ['S', 'M', 'T', 'O', 'T', 'F', 'L'] // Søndag, Mandag, Tirsdag, Onsdag, Torsdag, Fredag, Lørdag
+// Danish weekday abbreviations (Sunday-first indexed)
+const WEEKDAYS_DA = ['S', 'M', 'T', 'O', 'T', 'F', 'L'] // Søndag, Mandag, Tirsdag, Onsdag, Torsdag, Fredag, Lørdag
+
+// English weekday abbreviations (Sunday-first indexed)
+const WEEKDAYS_EN = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 
 // Danish month names
-const MONTHS = [
+const MONTHS_DA = [
   'Januar', 'Februar', 'Marts', 'April', 'Maj', 'Juni',
   'Juli', 'August', 'September', 'Oktober', 'November', 'December'
 ]
+
+// English month names
+const MONTHS_EN = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+]
+
+// Abbreviated month names
+const MONTHS_SHORT_DA = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec']
+const MONTHS_SHORT_EN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+export type Language = 'da' | 'en'
+export type WeekStart = 'monday' | 'sunday'
+
+export function getLocalizedNames(language: Language) {
+  return {
+    months: language === 'en' ? MONTHS_EN : MONTHS_DA,
+    monthsShort: language === 'en' ? MONTHS_SHORT_EN : MONTHS_SHORT_DA,
+    weekdays: language === 'en' ? WEEKDAYS_EN : WEEKDAYS_DA,
+  }
+}
 
 export interface DayInfo {
   date: Date
@@ -32,34 +56,67 @@ function getWeekNumber(date: Date): number {
 }
 
 // Generate month data
-export function generateMonthData(year: number, month: number): MonthData {
+export function generateMonthData(
+  year: number,
+  month: number,
+  language: Language = 'da',
+  weekStart: WeekStart = 'monday'
+): MonthData {
   const days: DayInfo[] = []
   const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const { weekdays, months } = getLocalizedNames(language)
 
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day)
     const dayOfWeek = date.getDay()
 
+    // For monday-start: last day of week is Sunday (0)
+    // For sunday-start: last day of week is Saturday (6)
+    const isLastDayOfWeek = weekStart === 'monday'
+      ? dayOfWeek === 0
+      : dayOfWeek === 6
+
     days.push({
       date,
       day,
-      weekday: WEEKDAYS[dayOfWeek],
+      weekday: weekdays[dayOfWeek],
       weekNumber: getWeekNumber(date),
-      isLastDayOfWeek: dayOfWeek === 0 // Sunday is last day of week in ISO
+      isLastDayOfWeek
     })
   }
 
   return {
-    name: MONTHS[month],
+    name: months[month],
     year,
     month,
     days
   }
 }
 
-// Generate calendar data for Jan-Jun 2026
-export function generateCalendarData(): MonthData[] {
-  return [0, 1, 2, 3, 4, 5].map(month => generateMonthData(2026, month))
+// Generate calendar data for a given range
+export function generateCalendarData(
+  start: string = '2026-01',
+  end: string = '2026-06',
+  language: Language = 'da',
+  weekStart: WeekStart = 'monday'
+): MonthData[] {
+  const [startYear, startMonth] = start.split('-').map(Number)
+  const [endYear, endMonth] = end.split('-').map(Number)
+
+  const months: MonthData[] = []
+  let year = startYear
+  let month = startMonth - 1 // Convert to 0-indexed
+
+  while (year < endYear || (year === endYear && month <= endMonth - 1)) {
+    months.push(generateMonthData(year, month, language, weekStart))
+    month++
+    if (month > 11) {
+      month = 0
+      year++
+    }
+  }
+
+  return months
 }
 
 // Format date as YYYY-MM-DD for database (using local timezone)

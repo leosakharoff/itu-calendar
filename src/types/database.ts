@@ -40,3 +40,13 @@ export interface Subscription {
   sort_order: number
   created_at: string
 }
+
+export interface UserSettings {
+  id: string
+  user_id: string
+  calendar_start: string // 'YYYY-MM'
+  calendar_end: string   // 'YYYY-MM'
+  week_start: 'monday' | 'sunday'
+  language: 'da' | 'en'
+  created_at: string
+}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react'
-import { generateCalendarData, formatDateForDB, type MonthData, type DayInfo } from '../lib/dates'
+import { generateCalendarData, getLocalizedNames, formatDateForDB, type MonthData, type DayInfo, type Language, type WeekStart } from '../lib/dates'
 import type { Course, CalendarEvent } from '../types/database'
 import './Calendar.css'
 
@@ -18,12 +18,14 @@ const TouchDragContext = createContext<TouchDragContextType>({
   setDropTargetDate: () => {},
 })
 
-const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun']
-
 interface CalendarProps {
   events: CalendarEvent[]
   courses: Course[]
   activeCourseIds: Set<string>
+  calendarStart?: string
+  calendarEnd?: string
+  weekStart?: WeekStart
+  language?: Language
   onDayClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
   onEventMove?: (eventId: string, newDate: string) => void
@@ -298,13 +300,39 @@ function useIsPortraitMobile() {
   return isPortrait
 }
 
-export function Calendar({ events, courses, activeCourseIds, onDayClick, onEventClick, onEventMove, onMonthPairChange }: CalendarProps) {
-  const months = generateCalendarData()
+export function Calendar({ events, courses, activeCourseIds, calendarStart = '2026-01', calendarEnd = '2026-06', weekStart = 'monday', language = 'da', onDayClick, onEventClick, onEventMove, onMonthPairChange }: CalendarProps) {
+  const months = generateCalendarData(calendarStart, calendarEnd, language, weekStart)
+  const { monthsShort } = getLocalizedNames(language)
+
+  // Build abbreviated month names for the current range
+  const monthNames = months.map(m => monthsShort[m.month])
+
   const [todayStr, setTodayStr] = useState(() => formatDateForDB(new Date()))
   const [draggingEventId, setDraggingEventId] = useState<string | null>(null)
   const [dropTargetDate, setDropTargetDate] = useState<string | null>(null)
-  const [startMonthIndex, setStartMonthIndex] = useState(0)
   const isPortraitMobile = useIsPortraitMobile()
+
+  // Calculate initial month index: try to show current month if in range
+  const getInitialMonthIndex = useCallback(() => {
+    const now = new Date()
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    const idx = months.findIndex(m => m.year === currentYear && m.month === currentMonth)
+    // Clamp to valid pair range (can't go past second-to-last)
+    const maxIdx = Math.max(0, months.length - 2)
+    if (idx >= 0) return Math.min(idx, maxIdx)
+    return 0
+  }, [months])
+
+  const [startMonthIndex, setStartMonthIndex] = useState(getInitialMonthIndex)
+
+  // Max index for month pair navigation
+  const maxMonthIndex = Math.max(0, months.length - 2)
+
+  // Clamp startMonthIndex when range changes
+  useEffect(() => {
+    setStartMonthIndex(prev => Math.min(prev, maxMonthIndex))
+  }, [maxMonthIndex])
 
   // Swipe handling refs
   const swipeStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
@@ -356,12 +384,12 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
 
     // Apply rubber-band resistance at edges
     let offset = dx
-    if ((startMonthIndex === 0 && dx > 0) || (startMonthIndex >= 4 && dx < 0)) {
+    if ((startMonthIndex === 0 && dx > 0) || (startMonthIndex >= maxMonthIndex && dx < 0)) {
       offset = dx * 0.3
     }
 
     setSwipeOffset(offset)
-  }, [isPortraitMobile, startMonthIndex, draggingEventId])
+  }, [isPortraitMobile, startMonthIndex, maxMonthIndex, draggingEventId])
 
   const handleSwipeEnd = useCallback((e: React.TouchEvent) => {
     if (!isPortraitMobile || !swipeStartRef.current || draggingEventId) return
@@ -374,7 +402,7 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
     // Snap if swiped far enough or fast enough
     if (swipeLockedRef.current === 'horizontal') {
       const threshold = velocity > 0.3 ? 20 : 80
-      if (dx < -threshold && startMonthIndex < 4) {
+      if (dx < -threshold && startMonthIndex < maxMonthIndex) {
         setStartMonthIndex(prev => prev + 1)
       } else if (dx > threshold && startMonthIndex > 0) {
         setStartMonthIndex(prev => prev - 1)
@@ -385,7 +413,7 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
     setIsSwiping(false)
     swipeStartRef.current = null
     swipeLockedRef.current = null
-  }, [isPortraitMobile, startMonthIndex, draggingEventId])
+  }, [isPortraitMobile, startMonthIndex, maxMonthIndex, draggingEventId])
 
   const gridStyle = isPortraitMobile
     ? {
@@ -395,7 +423,7 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
     : undefined
 
   const pairLabel = isPortraitMobile
-    ? `${MONTH_NAMES[startMonthIndex]} — ${MONTH_NAMES[startMonthIndex + 1]}`
+    ? `${monthNames[startMonthIndex]} — ${monthNames[startMonthIndex + 1]}`
     : ''
 
   useEffect(() => {
@@ -429,7 +457,7 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
         </div>
         <div className="month-indicator">
           <div className="month-indicator-dots">
-            {[0, 1, 2, 3, 4].map(i => (
+            {Array.from({ length: maxMonthIndex + 1 }, (_, i) => (
               <button
                 key={i}
                 className={`month-indicator-dot ${i === startMonthIndex ? 'active' : ''}`}

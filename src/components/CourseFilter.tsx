@@ -1,6 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import type { Course } from '../types/database'
+import type { Course, UserSettings } from '../types/database'
 import './CourseFilter.css'
+
+const MONTH_OPTIONS = [
+  { value: '01', label: 'Jan' }, { value: '02', label: 'Feb' },
+  { value: '03', label: 'Mar' }, { value: '04', label: 'Apr' },
+  { value: '05', label: 'May' }, { value: '06', label: 'Jun' },
+  { value: '07', label: 'Jul' }, { value: '08', label: 'Aug' },
+  { value: '09', label: 'Sep' }, { value: '10', label: 'Oct' },
+  { value: '11', label: 'Nov' }, { value: '12', label: 'Dec' },
+]
+
+const YEAR_OPTIONS = ['2025', '2026', '2027', '2028']
 
 interface CourseFilterProps {
   courses: Course[]
@@ -13,9 +24,11 @@ interface CourseFilterProps {
   onOpenProfile: () => void
   userInitials: string
   monthPairLabel?: string
+  settings?: UserSettings | null
+  onUpdateSettings?: (partial: Partial<Pick<UserSettings, 'calendar_start' | 'calendar_end' | 'week_start' | 'language'>>) => void
 }
 
-export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onOpenProfile, userInitials, monthPairLabel }: CourseFilterProps) {
+export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onOpenProfile, userInitials, monthPairLabel, settings, onUpdateSettings }: CourseFilterProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const dragOverId = useRef<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -98,6 +111,67 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
       </label>
     ))
 
+  const startMonth = settings?.calendar_start?.split('-')[1] || '01'
+  const startYear = settings?.calendar_start?.split('-')[0] || '2026'
+  const endMonth = settings?.calendar_end?.split('-')[1] || '06'
+  const endYear = settings?.calendar_end?.split('-')[0] || '2026'
+
+  const settingsSection = settings && onUpdateSettings ? (
+    <div className="settings-section">
+      <div className="settings-title">Settings</div>
+      <div className="settings-row">
+        <span className="settings-label">{settings.language === 'en' ? 'Date range' : 'Datointerval'}</span>
+        <div className="settings-range">
+          <select
+            value={startMonth}
+            onChange={e => onUpdateSettings({ calendar_start: `${startYear}-${e.target.value}` })}
+          >
+            {MONTH_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+          <select
+            value={startYear}
+            onChange={e => onUpdateSettings({ calendar_start: `${e.target.value}-${startMonth}` })}
+          >
+            {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          <span className="settings-range-sep">—</span>
+          <select
+            value={endMonth}
+            onChange={e => onUpdateSettings({ calendar_end: `${endYear}-${e.target.value}` })}
+          >
+            {MONTH_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+          </select>
+          <select
+            value={endYear}
+            onChange={e => onUpdateSettings({ calendar_end: `${e.target.value}-${endMonth}` })}
+          >
+            {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+      </div>
+      <div className="settings-row">
+        <span className="settings-label">{settings.language === 'en' ? 'Week starts' : 'Uge starter'}</span>
+        <select
+          value={settings.week_start}
+          onChange={e => onUpdateSettings({ week_start: e.target.value as 'monday' | 'sunday' })}
+        >
+          <option value="monday">{settings.language === 'en' ? 'Monday' : 'Mandag'}</option>
+          <option value="sunday">{settings.language === 'en' ? 'Sunday' : 'Søndag'}</option>
+        </select>
+      </div>
+      <div className="settings-row">
+        <span className="settings-label">{settings.language === 'en' ? 'Language' : 'Sprog'}</span>
+        <select
+          value={settings.language}
+          onChange={e => onUpdateSettings({ language: e.target.value as 'da' | 'en' })}
+        >
+          <option value="da">Dansk</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+    </div>
+  ) : null
+
   if (isMobile) {
     return (
       <>
@@ -131,7 +205,7 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
         />
         <div className={`drawer-panel ${drawerOpen ? 'open' : ''}`}>
           <div className="drawer-header">
-            <span className="drawer-title">Courses</span>
+            <span className="drawer-title">{settings?.language === 'en' ? 'Courses' : 'Kurser'}</span>
             <button
               className="drawer-close-btn"
               onClick={closeDrawer}
@@ -143,13 +217,14 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
           <div className="drawer-body">
             {courseItems(true)}
             <button className="add-course-btn" onClick={onAddCourse}>
-              + Add Course
+              + {settings?.language === 'en' ? 'Add Course' : 'Tilføj kursus'}
             </button>
+            {settingsSection}
           </div>
           <div className="drawer-footer">
             <button className="drawer-profile-btn" onClick={() => { closeDrawer(); onOpenProfile() }}>
               <span className="avatar-initials-small">{userInitials}</span>
-              Profile settings
+              {settings?.language === 'en' ? 'Profile settings' : 'Profilindstillinger'}
             </button>
           </div>
         </div>
@@ -159,13 +234,14 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
 
   return (
     <div className="course-filter">
-      <div className="filter-label">Courses:</div>
+      <div className="filter-label">{settings?.language === 'en' ? 'Courses:' : 'Kurser:'}</div>
       <div className="filter-items">
         {courseItems(false)}
         <button className="add-course-btn" onClick={onAddCourse}>
-          + Add Course
+          + {settings?.language === 'en' ? 'Add Course' : 'Tilføj kursus'}
         </button>
       </div>
+      {settingsSection}
       <div className="user-section">
         <button
           className="avatar-btn"
