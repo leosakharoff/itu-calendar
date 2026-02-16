@@ -6,6 +6,7 @@ import { EventDetailModal } from './components/EventDetailModal'
 import { CourseModal } from './components/CourseModal'
 import { ProfileModal, getInitials } from './components/ProfileModal'
 import { SettingsModal } from './components/SettingsModal'
+import { CalendarSettingsModal } from './components/CalendarSettingsModal'
 import { NotificationSettingsModal } from './components/NotificationSettingsModal'
 import { ShareModal } from './components/ShareModal'
 import { OfflineIndicator } from './components/OfflineIndicator'
@@ -49,6 +50,7 @@ function MainApp() {
   const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [calendarSettingsOpen, setCalendarSettingsOpen] = useState(false)
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false)
   const [monthPairLabel, setMonthPairLabel] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
@@ -291,13 +293,21 @@ function MainApp() {
       )}
 
       {settings && (
-        <SettingsModal
-          isOpen={settingsModalOpen}
-          onClose={() => setSettingsModalOpen(false)}
-          settings={settings}
-          onUpdateSettings={updateSettings}
-          onOpenNotifications={() => setNotificationSettingsOpen(true)}
-        />
+        <>
+          <SettingsModal
+            isOpen={settingsModalOpen}
+            onClose={() => setSettingsModalOpen(false)}
+            settings={settings}
+            onOpenCalendarSettings={() => setCalendarSettingsOpen(true)}
+            onOpenNotifications={() => setNotificationSettingsOpen(true)}
+          />
+          <CalendarSettingsModal
+            isOpen={calendarSettingsOpen}
+            onClose={() => setCalendarSettingsOpen(false)}
+            settings={settings}
+            onUpdateSettings={updateSettings}
+          />
+        </>
       )}
 
       <ShareModal
