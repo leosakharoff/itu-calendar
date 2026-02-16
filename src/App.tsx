@@ -40,7 +40,7 @@ function MainApp() {
     subscribeToShareCopy, subscribeToShareLive, isEventSubscribed
   } = useCalendarData(user?.id)
   const { settings, loading: settingsLoading, updateSettings } = useSettings(user?.id)
-  const { settings: notificationSettings, updateNotificationSettings, testDiscordWebhook } = useNotificationSettings(user?.id)
+  const { settings: notificationSettings, updateNotificationSettings, testDiscordWebhook, testEmail } = useNotificationSettings(user?.id)
 
   const [activeCourseIds, setActiveCourseIds] = useState<Set<string>>(new Set())
   const [eventModalOpen, setEventModalOpen] = useState(false)
@@ -317,6 +317,8 @@ function MainApp() {
         settings={notificationSettings}
         onUpdate={updateNotificationSettings}
         onTestWebhook={testDiscordWebhook}
+        onTestEmail={testEmail}
+        userEmail={user?.email}
         language={settings?.language}
       />
 

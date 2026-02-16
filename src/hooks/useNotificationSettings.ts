@@ -5,6 +5,7 @@ import type { NotificationSettings } from '../types/database'
 const DEFAULTS: Omit<NotificationSettings, 'id' | 'user_id' | 'created_at'> = {
   discord_webhook_url: null,
   discord_enabled: false,
+  email_enabled: false,
   notify_event_types: ['deliverable', 'exam'],
   notify_day_before: true,
   notify_same_day: true,
@@ -89,6 +90,31 @@ export function useNotificationSettings(userId: string | undefined) {
     }
   }, [settings, userId])
 
+  const testEmail = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return { ok: false, error: 'Not logged in' }
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const res = await fetch(`${supabaseUrl}/functions/v1/send-notifications`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ test_mode: true, test_type: 'email' }),
+      })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        return { ok: false, error: body.error || `Server returned ${res.status}` }
+      }
+      return { ok: true }
+    } catch (err) {
+      return { ok: false, error: (err as Error).message }
+    }
+  }, [])
+
   const testDiscordWebhook = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
     const url = settings?.discord_webhook_url
     if (!url) return { ok: false, error: 'No webhook URL' }
@@ -116,5 +142,5 @@ export function useNotificationSettings(userId: string | undefined) {
     }
   }, [settings?.discord_webhook_url])
 
-  return { settings, loading, updateNotificationSettings, testDiscordWebhook }
+  return { settings, loading, updateNotificationSettings, testDiscordWebhook, testEmail }
 }

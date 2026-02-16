@@ -138,6 +138,15 @@
   color: var(--color-danger, #ff3b30);
 }
 
+/* Email label */
+.notification-email-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Time input */
 .notification-time-input {
   font-family: inherit;

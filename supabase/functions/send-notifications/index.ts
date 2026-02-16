@@ -15,26 +15,31 @@ Deno.serve(async (req) => {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders })
   }
 
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  // Check if this is a test request from a logged-in user
+  const body = await req.json().catch(() => ({}))
+
+  if (body.test_mode && body.test_type === 'email') {
+    return await handleEmailTest(req, supabase)
+  }
+
   // Verify authorization (service role key or cron secret)
   const authHeader = req.headers.get('Authorization')
   const cronSecret = Deno.env.get('CRON_SECRET')
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     if (authHeader !== `Bearer ${supabaseServiceKey}`) {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-  // Get all users with Discord notifications enabled
+  // Get all users with any notification channel enabled
   const { data: notifSettings, error: settingsError } = await supabase
     .from('notification_settings')
     .select('*')
-    .eq('discord_enabled', true)
-    .not('discord_webhook_url', 'is', null)
+    .or('discord_enabled.eq.true,email_enabled.eq.true')
 
   if (settingsError) {
     return new Response(JSON.stringify({ error: 'Failed to fetch notification settings' }), {
@@ -44,7 +49,7 @@ Deno.serve(async (req) => {
   }
 
   if (!notifSettings || notifSettings.length === 0) {
-    return new Response(JSON.stringify({ sent: 0, message: 'No users with Discord enabled' }), {
+    return new Response(JSON.stringify({ sent: 0, message: 'No users with notifications enabled' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
@@ -99,30 +104,51 @@ Deno.serve(async (req) => {
       const todayEvents = filteredEvents.filter((e: CalendarEvent) => e.date === todayStr)
       const tomorrowEvents = filteredEvents.filter((e: CalendarEvent) => e.date === tomorrowStr)
 
-      // Build Discord embeds
-      const embeds: DiscordEmbed[] = []
-
-      if (todayEvents.length > 0 && ns.notify_same_day) {
-        embeds.push(buildEmbed(`Today — ${todayStr}`, todayEvents, courseMap, 0x007AFF))
-      }
-
-      if (tomorrowEvents.length > 0 && ns.notify_day_before) {
-        embeds.push(buildEmbed(`Tomorrow — ${tomorrowStr}`, tomorrowEvents, courseMap, 0xFF9500))
-      }
-
-      if (embeds.length === 0) continue
-
       // Send to Discord
-      const res = await fetch(ns.discord_webhook_url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ embeds }),
-      })
+      if (ns.discord_enabled && ns.discord_webhook_url) {
+        const embeds: DiscordEmbed[] = []
 
-      if (res.ok) {
-        totalSent++
-      } else {
-        errors.push(`User ${ns.user_id}: Discord returned ${res.status}`)
+        if (todayEvents.length > 0 && ns.notify_same_day) {
+          embeds.push(buildEmbed(`Today — ${todayStr}`, todayEvents, courseMap, 0x007AFF))
+        }
+
+        if (tomorrowEvents.length > 0 && ns.notify_day_before) {
+          embeds.push(buildEmbed(`Tomorrow — ${tomorrowStr}`, tomorrowEvents, courseMap, 0xFF9500))
+        }
+
+        if (embeds.length > 0) {
+          const res = await fetch(ns.discord_webhook_url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ embeds }),
+          })
+
+          if (res.ok) {
+            totalSent++
+          } else {
+            errors.push(`User ${ns.user_id}: Discord returned ${res.status}`)
+          }
+        }
+      }
+
+      // Send email via Resend
+      if (ns.email_enabled) {
+        const { data: userData } = await supabase.auth.admin.getUserById(ns.user_id)
+        const userEmail = userData?.user?.email
+
+        if (userEmail) {
+          const html = buildEmailHtml(todayEvents, tomorrowEvents, courseMap, todayStr, tomorrowStr, ns)
+          if (html) {
+            const subject = `ITU Calendar — Events for ${todayStr}`
+            const emailResult = await sendEmail(userEmail, subject, html)
+
+            if (emailResult.ok) {
+              totalSent++
+            } else {
+              errors.push(`User ${ns.user_id}: Email failed — ${emailResult.error}`)
+            }
+          }
+        }
       }
     } catch (err) {
       errors.push(`User ${ns.user_id}: ${(err as Error).message}`)
@@ -133,6 +159,133 @@ Deno.serve(async (req) => {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
 })
+
+// Handle test email request from authenticated user
+async function handleEmailTest(
+  req: Request,
+  supabase: ReturnType<typeof createClient>,
+): Promise<Response> {
+  const authHeader = req.headers.get('Authorization')
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ error: 'Missing auth token' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const token = authHeader.replace('Bearer ', '')
+  const { data: { user }, error } = await supabase.auth.getUser(token)
+
+  if (error || !user?.email) {
+    return new Response(JSON.stringify({ error: 'Could not resolve user email' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const result = await sendEmail(
+    user.email,
+    'ITU Calendar — Test Email',
+    `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <h2 style="margin: 0 0 8px; font-size: 18px; color: #1a1a1a;">ITU Calendar</h2>
+      <p style="margin: 0; color: #555; font-size: 15px;">Your email notifications are working! You will receive event reminders at this address.</p>
+    </div>`,
+  )
+
+  if (result.ok) {
+    return new Response(JSON.stringify({ ok: true }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  return new Response(JSON.stringify({ error: result.error }), {
+    status: 500,
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+  })
+}
+
+// Send email via Resend API
+async function sendEmail(to: string, subject: string, html: string): Promise<{ ok: boolean; error?: string }> {
+  const apiKey = Deno.env.get('RESEND_API_KEY')
+  if (!apiKey) {
+    return { ok: false, error: 'RESEND_API_KEY not configured' }
+  }
+
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        from: 'ITU Calendar <notifications@itucal.dk>',
+        to,
+        subject,
+        html,
+      }),
+    })
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      return { ok: false, error: body.message || `Resend returned ${res.status}` }
+    }
+
+    return { ok: true }
+  } catch (err) {
+    return { ok: false, error: (err as Error).message }
+  }
+}
+
+// Build HTML email body
+function buildEmailHtml(
+  todayEvents: CalendarEvent[],
+  tomorrowEvents: CalendarEvent[],
+  courseMap: Map<string, { name: string; color: string }>,
+  todayStr: string,
+  tomorrowStr: string,
+  ns: { notify_same_day: boolean; notify_day_before: boolean },
+): string | null {
+  const sections: string[] = []
+
+  if (todayEvents.length > 0 && ns.notify_same_day) {
+    sections.push(buildEmailSection(`Today (${todayStr})`, todayEvents, courseMap))
+  }
+
+  if (tomorrowEvents.length > 0 && ns.notify_day_before) {
+    sections.push(buildEmailSection(`Tomorrow (${tomorrowStr})`, tomorrowEvents, courseMap))
+  }
+
+  if (sections.length === 0) return null
+
+  return `<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+  <h2 style="margin: 0 0 16px; font-size: 18px; color: #1a1a1a;">ITU Calendar</h2>
+  ${sections.join('')}
+  <p style="margin: 16px 0 0; font-size: 12px; color: #999;">You can manage notifications at itucal.dk</p>
+</div>`
+}
+
+function buildEmailSection(
+  title: string,
+  events: CalendarEvent[],
+  courseMap: Map<string, { name: string; color: string }>,
+): string {
+  const items = events.map(e => {
+    const course = e.course_id ? courseMap.get(e.course_id) : null
+    const courseName = course ? ` (${course.name})` : ''
+    const time = e.start_time
+      ? (e.end_time ? `${e.start_time}\u2013${e.end_time}` : e.start_time)
+      : ''
+    const typeTag = e.type !== 'lecture' ? ` [${e.type}]` : ''
+    const timeStr = time ? `<span style="color: #888;">${time}</span> ` : ''
+    return `<li style="margin: 4px 0; font-size: 14px; color: #333;">${timeStr}<strong>${e.title}</strong>${courseName}${typeTag}</li>`
+  })
+
+  return `<div style="margin-bottom: 16px;">
+  <h3 style="margin: 0 0 8px; font-size: 15px; color: #555;">${title}</h3>
+  <ul style="margin: 0; padding: 0 0 0 20px;">${items.join('')}</ul>
+</div>`
+}
 
 interface DiscordEmbed {
   title: string

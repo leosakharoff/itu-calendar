@@ -48,6 +48,7 @@ export interface NotificationSettings {
   user_id: string
   discord_webhook_url: string | null
   discord_enabled: boolean
+  email_enabled: boolean
   notify_event_types: EventType[]
   notify_day_before: boolean
   notify_same_day: boolean

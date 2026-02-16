@@ -20,13 +20,17 @@ interface NotificationSettingsModalProps {
   settings: NotificationSettings | null
   onUpdate: (partial: Partial<Omit<NotificationSettings, 'id' | 'user_id' | 'created_at'>>) => void
   onTestWebhook: () => Promise<{ ok: boolean; error?: string }>
+  onTestEmail: () => Promise<{ ok: boolean; error?: string }>
+  userEmail?: string
   language?: Language
 }
 
-export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate, onTestWebhook, language = 'da' }: NotificationSettingsModalProps) {
+export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate, onTestWebhook, onTestEmail, userEmail, language = 'da' }: NotificationSettingsModalProps) {
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
   const [testResult, setTestResult] = useState<{ ok: boolean; error?: string } | null>(null)
   const [testing, setTesting] = useState(false)
+  const [emailTestResult, setEmailTestResult] = useState<{ ok: boolean; error?: string } | null>(null)
+  const [emailTesting, setEmailTesting] = useState(false)
 
   if (!isOpen || !settings) return null
 
@@ -39,6 +43,14 @@ export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate,
     const result = await onTestWebhook()
     setTestResult(result)
     setTesting(false)
+  }
+
+  const handleEmailTest = async () => {
+    setEmailTesting(true)
+    setEmailTestResult(null)
+    const result = await onTestEmail()
+    setEmailTestResult(result)
+    setEmailTesting(false)
   }
 
   const toggleEventType = (type: EventType) => {
@@ -92,6 +104,44 @@ export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate,
                   {testResult.ok
                     ? (isEn ? 'Message sent!' : 'Besked sendt!')
                     : (isEn ? `Failed: ${testResult.error}` : `Fejl: ${testResult.error}`)}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Email section */}
+        <div className="notification-section">
+          <div className="notification-section-title">Email</div>
+
+          <div className="notification-row">
+            <span className="notification-row-label">{isEn ? 'Send via email' : 'Send via email'}</span>
+            <button
+              type="button"
+              className={`notification-toggle ${settings.email_enabled ? 'active' : ''}`}
+              onClick={() => onUpdate({ email_enabled: !settings.email_enabled })}
+              aria-label="Toggle email notifications"
+            />
+          </div>
+
+          {settings.email_enabled && (
+            <>
+              {userEmail && (
+                <div className="notification-email-label">{userEmail}</div>
+              )}
+              <button
+                type="button"
+                className="notification-test-btn"
+                onClick={handleEmailTest}
+                disabled={emailTesting}
+              >
+                {emailTesting ? (isEn ? 'Sending...' : 'Sender...') : 'Test'}
+              </button>
+              {emailTestResult && (
+                <div className={`notification-test-result ${emailTestResult.ok ? 'success' : 'error'}`}>
+                  {emailTestResult.ok
+                    ? (isEn ? 'Email sent!' : 'Email sendt!')
+                    : (isEn ? `Failed: ${emailTestResult.error}` : `Fejl: ${emailTestResult.error}`)}
                 </div>
               )}
             </>
