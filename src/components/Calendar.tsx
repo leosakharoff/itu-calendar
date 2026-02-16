@@ -347,7 +347,7 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
   }, [isPortraitMobile, startMonthIndex, draggingEventId])
 
   const gridStyle = isPortraitMobile
-    ? { transform: `translateX(-${startMonthIndex * 100}%)` }
+    ? { transform: `translateX(-${startMonthIndex * 50}%)` }
     : undefined
 
   const pairLabel = isPortraitMobile
