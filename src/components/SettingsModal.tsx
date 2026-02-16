@@ -37,39 +37,48 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSettings, onO
       <div ref={sheetRef} className="modal-content settings-modal" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
         <h3>{isEn ? 'Settings' : 'Indstillinger'}</h3>
 
-        <div className="settings-modal-row">
-          <span className="settings-modal-label">{isEn ? 'Date range' : 'Datointerval'}</span>
-          <div className="settings-modal-range">
-            <select value={startMonth} onChange={e => onUpdateSettings({ calendar_start: `${startYear}-${e.target.value}` })}>
-              {MONTH_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-            </select>
-            <select value={startYear} onChange={e => onUpdateSettings({ calendar_start: `${e.target.value}-${startMonth}` })}>
-              {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
-            </select>
-            <span className="settings-modal-sep">&mdash;</span>
-            <select value={endMonth} onChange={e => onUpdateSettings({ calendar_end: `${endYear}-${e.target.value}` })}>
-              {MONTH_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-            </select>
-            <select value={endYear} onChange={e => onUpdateSettings({ calendar_end: `${e.target.value}-${endMonth}` })}>
-              {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+        <div className="settings-section">
+          <div className="settings-section-title">{isEn ? 'Calendar' : 'Kalender'}</div>
+
+          <div className="settings-modal-row">
+            <span className="settings-modal-label">{isEn ? 'From' : 'Fra'}</span>
+            <div className="settings-modal-range-group">
+              <select value={startMonth} onChange={e => onUpdateSettings({ calendar_start: `${startYear}-${e.target.value}` })}>
+                {MONTH_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+              <select value={startYear} onChange={e => onUpdateSettings({ calendar_start: `${e.target.value}-${startMonth}` })}>
+                {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="settings-modal-row">
+            <span className="settings-modal-label">{isEn ? 'To' : 'Til'}</span>
+            <div className="settings-modal-range-group">
+              <select value={endMonth} onChange={e => onUpdateSettings({ calendar_end: `${endYear}-${e.target.value}` })}>
+                {MONTH_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+              <select value={endYear} onChange={e => onUpdateSettings({ calendar_end: `${e.target.value}-${endMonth}` })}>
+                {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="settings-modal-row">
+            <span className="settings-modal-label">{isEn ? 'Week starts' : 'Uge starter'}</span>
+            <select value={settings.week_start} onChange={e => onUpdateSettings({ week_start: e.target.value as 'monday' | 'sunday' })}>
+              <option value="monday">{isEn ? 'Monday' : 'Mandag'}</option>
+              <option value="sunday">{isEn ? 'Sunday' : 'Sondag'}</option>
             </select>
           </div>
-        </div>
 
-        <div className="settings-modal-row">
-          <span className="settings-modal-label">{isEn ? 'Week starts' : 'Uge starter'}</span>
-          <select value={settings.week_start} onChange={e => onUpdateSettings({ week_start: e.target.value as 'monday' | 'sunday' })}>
-            <option value="monday">{isEn ? 'Monday' : 'Mandag'}</option>
-            <option value="sunday">{isEn ? 'Sunday' : 'Sondag'}</option>
-          </select>
-        </div>
-
-        <div className="settings-modal-row">
-          <span className="settings-modal-label">{isEn ? 'Language' : 'Sprog'}</span>
-          <select value={settings.language} onChange={e => onUpdateSettings({ language: e.target.value as 'da' | 'en' })}>
-            <option value="da">Dansk</option>
-            <option value="en">English</option>
-          </select>
+          <div className="settings-modal-row">
+            <span className="settings-modal-label">{isEn ? 'Language' : 'Sprog'}</span>
+            <select value={settings.language} onChange={e => onUpdateSettings({ language: e.target.value as 'da' | 'en' })}>
+              <option value="da">Dansk</option>
+              <option value="en">English</option>
+            </select>
+          </div>
         </div>
 
         <div className="settings-modal-row settings-modal-link" onClick={() => { onClose(); onOpenNotifications() }}>
