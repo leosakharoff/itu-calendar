@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Course, CalendarEvent, EventType } from '../types/database'
 import { formatDateForDB } from '../lib/dates'
+import { useBottomSheetDismiss } from '../hooks/useBottomSheetDismiss'
 import './EventModal.css'
 
 interface EventModalProps {
@@ -37,6 +38,8 @@ export function EventModal({
   const [type, setType] = useState<EventType>('lecture')
   const [courseId, setCourseId] = useState<string>('')
   const [notes, setNotes] = useState('')
+
+  const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
   useEffect(() => {
     if (editingEvent) {
@@ -80,8 +83,8 @@ export function EventModal({
   // Read-only view for events from subscribed courses
   if (isReadOnly && editingEvent) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
+        <div ref={sheetRef} className="modal-content" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
           <h3>Event Details</h3>
 
           <p className="subscribed-notice">This event is from a subscribed course.</p>
@@ -119,8 +122,8 @@ export function EventModal({
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
+      <div ref={sheetRef} className="modal-content" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
         <h3>{editingEvent ? 'Edit Event' : 'Add Event'}</h3>
         <form onSubmit={handleSubmit}>
           <div className="form-group">

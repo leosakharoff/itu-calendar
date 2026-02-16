@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Course, SharedCalendar } from '../types/database'
+import { useBottomSheetDismiss } from '../hooks/useBottomSheetDismiss'
 import './EventModal.css'
 import './ShareSection.css'
 
@@ -46,6 +47,8 @@ export function CourseModal({
   const [subscribeLoading, setSubscribeLoading] = useState(false)
   const [subscribeError, setSubscribeError] = useState<string | null>(null)
   const [subscribeMode, setSubscribeMode] = useState<SubscribeMode>('live')
+
+  const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
   useEffect(() => {
     if (editingCourse) {
@@ -174,8 +177,8 @@ export function CourseModal({
   // When editing a subscribed course, show read-only view
   if (editingCourse?.isSubscribed) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
+        <div ref={sheetRef} className="modal-content" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
           <h3>Subscribed Course</h3>
 
           <div className="form-group">
@@ -211,8 +214,8 @@ export function CourseModal({
   // When editing an owned course, show the standard form
   if (editingCourse) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
+      <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
+        <div ref={sheetRef} className="modal-content" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
           <h3>Edit Course</h3>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
@@ -314,8 +317,8 @@ export function CourseModal({
 
   // When adding new: show tabs for "New course" vs "Subscribe"
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={e => e.stopPropagation()}>
+    <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
+      <div ref={sheetRef} className="modal-content" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
         <h3>Add Course</h3>
 
         <div className="course-modal-tabs">

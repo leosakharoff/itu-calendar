@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { useBottomSheetDismiss } from '../hooks/useBottomSheetDismiss'
 import './ProfileModal.css'
 
 interface ProfileModalProps {
@@ -38,11 +39,7 @@ export function ProfileModal({
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
 
-  // Swipe-to-dismiss state
-  const [dragY, setDragY] = useState(0)
-  const [isDragging, setIsDragging] = useState(false)
-  const dragStartRef = useRef<{ y: number; time: number } | null>(null)
-  const modalRef = useRef<HTMLDivElement>(null)
+  const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
   useEffect(() => {
     if (isOpen) {
@@ -51,60 +48,8 @@ export function ProfileModal({
       setNewPassword('')
       setConfirmPassword('')
       setMessage(null)
-      setDragY(0)
-      setIsDragging(false)
     }
   }, [isOpen, user])
-
-  const handleModalTouchStart = useCallback((e: React.TouchEvent) => {
-    // Only allow drag from the grab handle area or when scrolled to top
-    const modal = modalRef.current
-    if (!modal) return
-    // If the modal content is scrolled down, don't start drag
-    if (modal.scrollTop > 0) return
-    const touch = e.touches[0]
-    dragStartRef.current = { y: touch.clientY, time: Date.now() }
-  }, [])
-
-  const handleModalTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!dragStartRef.current) return
-    const touch = e.touches[0]
-    const dy = touch.clientY - dragStartRef.current.y
-
-    // Only drag downward
-    if (dy < 0) {
-      setDragY(0)
-      return
-    }
-
-    // If we're dragging down, prevent scroll and start tracking
-    if (dy > 10) {
-      setIsDragging(true)
-      setDragY(dy)
-    }
-  }, [])
-
-  const handleModalTouchEnd = useCallback(() => {
-    if (!dragStartRef.current || !isDragging) {
-      dragStartRef.current = null
-      return
-    }
-
-    const elapsed = Date.now() - dragStartRef.current.time
-    const velocity = dragY / elapsed // px/ms
-
-    // Dismiss if dragged far enough or fast enough
-    if (dragY > 150 || velocity > 0.5) {
-      // Animate off screen then close
-      setDragY(window.innerHeight)
-      setTimeout(onClose, 200)
-    } else {
-      setDragY(0)
-    }
-
-    setIsDragging(false)
-    dragStartRef.current = null
-  }, [isDragging, dragY, onClose])
 
   if (!isOpen) return null
 
@@ -157,18 +102,19 @@ export function ProfileModal({
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${Math.max(0, 0.4 - dragY / 800)})` } : undefined}>
+    <div
+      className="modal-overlay"
+      onClick={onClose}
+      style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}
+    >
       <div
-        ref={modalRef}
+        ref={sheetRef}
         className="modal-content profile-modal"
         onClick={e => e.stopPropagation()}
-        onTouchStart={handleModalTouchStart}
-        onTouchMove={handleModalTouchMove}
-        onTouchEnd={handleModalTouchEnd}
-        style={dragY > 0 ? {
-          transform: `translateY(${dragY}px)`,
-          transition: isDragging ? 'none' : 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-        } : undefined}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        style={sheetStyle}
       >
         <h3>Profile</h3>
 
