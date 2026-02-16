@@ -182,13 +182,6 @@
   color: #fff;
 }
 
-/* Phone hint */
-.notification-phone-hint {
-  font-size: var(--font-size-xs);
-  font-style: italic;
-  color: var(--color-text-tertiary);
-}
-
 @media (max-width: 768px) {
   .notification-webhook-input,
   .notification-time-input {

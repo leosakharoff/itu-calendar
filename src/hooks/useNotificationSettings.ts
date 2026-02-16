@@ -6,8 +6,6 @@ const DEFAULTS: Omit<NotificationSettings, 'id' | 'user_id' | 'created_at'> = {
   discord_webhook_url: null,
   discord_enabled: false,
   notify_event_types: ['deliverable', 'exam'],
-  sms_enabled: false,
-  sms_phone_number: null,
   notify_day_before: true,
   notify_same_day: true,
   notify_time: '08:00',
@@ -118,37 +116,5 @@ export function useNotificationSettings(userId: string | undefined) {
     }
   }, [settings?.discord_webhook_url])
 
-  const testSms = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
-    const phone = settings?.sms_phone_number
-    if (!phone) return { ok: false, error: 'No phone number' }
-
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session?.access_token) return { ok: false, error: 'Not authenticated' }
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-      const res = await fetch(`${supabaseUrl}/functions/v1/send-notifications`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          test_mode: true,
-          test_type: 'sms',
-          test_phone: phone,
-        }),
-      })
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}))
-        return { ok: false, error: body.error || `Server returned ${res.status}` }
-      }
-      return { ok: true }
-    } catch (err) {
-      return { ok: false, error: (err as Error).message }
-    }
-  }, [settings?.sms_phone_number])
-
-  return { settings, loading, updateNotificationSettings, testDiscordWebhook, testSms }
+  return { settings, loading, updateNotificationSettings, testDiscordWebhook }
 }
