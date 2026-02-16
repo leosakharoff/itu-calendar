@@ -1,0 +1,163 @@
+.notification-settings-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.notification-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.notification-section-title {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--color-text-tertiary);
+  padding-bottom: var(--space-xs);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.notification-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  min-height: 40px;
+}
+
+.notification-row-label {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+/* Toggle switch */
+.notification-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--color-border-strong);
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.notification-toggle.active {
+  background: var(--color-accent);
+}
+
+.notification-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform var(--transition-fast);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.notification-toggle.active::after {
+  transform: translateX(20px);
+}
+
+/* Webhook URL input */
+.notification-webhook-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  box-sizing: border-box;
+}
+
+.notification-webhook-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.15);
+}
+
+.notification-webhook-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* Test button */
+.notification-test-btn {
+  align-self: flex-start;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  padding: var(--space-xs) var(--space-md);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--color-accent);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.notification-test-btn:hover {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.notification-test-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.notification-test-btn:disabled:hover {
+  background: none;
+  color: var(--color-accent);
+}
+
+/* Test result feedback */
+.notification-test-result {
+  font-size: var(--font-size-sm);
+  padding: var(--space-xs) 0;
+}
+
+.notification-test-result.success {
+  color: var(--color-success, #34c759);
+}
+
+.notification-test-result.error {
+  color: var(--color-danger, #ff3b30);
+}
+
+/* Time input */
+.notification-time-input {
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  padding: var(--space-xs) var(--space-sm);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+.notification-time-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.15);
+}
+
+@media (max-width: 768px) {
+  .notification-webhook-input,
+  .notification-time-input {
+    font-size: 16px;
+  }
+}

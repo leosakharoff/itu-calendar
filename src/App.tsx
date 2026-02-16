@@ -6,12 +6,14 @@ import { EventDetailModal } from './components/EventDetailModal'
 import { CourseModal } from './components/CourseModal'
 import { ProfileModal, getInitials } from './components/ProfileModal'
 import { SettingsModal } from './components/SettingsModal'
+import { NotificationSettingsModal } from './components/NotificationSettingsModal'
 import { ShareModal } from './components/ShareModal'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { LoginPage } from './components/LoginPage'
 import { SubscribeView } from './components/SubscribeView'
 import { useCalendarData } from './hooks/useCalendarData'
 import { useSettings } from './hooks/useSettings'
+import { useNotificationSettings } from './hooks/useNotificationSettings'
 import { useAuthContext } from './contexts/AuthContext'
 import type { CalendarEvent, Course } from './types/database'
 import './App.css'
@@ -38,6 +40,7 @@ function MainApp() {
     subscribeToShareCopy, subscribeToShareLive, isEventSubscribed
   } = useCalendarData(user?.id)
   const { settings, loading: settingsLoading, updateSettings } = useSettings(user?.id)
+  const { settings: notificationSettings, updateNotificationSettings, testDiscordWebhook } = useNotificationSettings(user?.id)
 
   const [activeCourseIds, setActiveCourseIds] = useState<Set<string>>(new Set())
   const [eventModalOpen, setEventModalOpen] = useState(false)
@@ -46,6 +49,7 @@ function MainApp() {
   const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [settingsModalOpen, setSettingsModalOpen] = useState(false)
   const [shareModalOpen, setShareModalOpen] = useState(false)
+  const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false)
   const [monthPairLabel, setMonthPairLabel] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
@@ -224,6 +228,7 @@ function MainApp() {
         onOpenProfile={() => setProfileModalOpen(true)}
         onOpenSettings={() => setSettingsModalOpen(true)}
         onOpenShare={() => setShareModalOpen(true)}
+        onOpenNotifications={() => setNotificationSettingsOpen(true)}
         userInitials={user ? getInitials(user) : '?'}
         avatarUrl={user?.user_metadata?.avatar_url || undefined}
         monthPairLabel={monthPairLabel}
@@ -291,6 +296,7 @@ function MainApp() {
           onClose={() => setSettingsModalOpen(false)}
           settings={settings}
           onUpdateSettings={updateSettings}
+          onOpenNotifications={() => setNotificationSettingsOpen(true)}
         />
       )}
 
@@ -302,6 +308,15 @@ function MainApp() {
         onGetShare={getShareForCourse}
         onCreateShare={createShare}
         onToggleShare={toggleShare}
+        language={settings?.language}
+      />
+
+      <NotificationSettingsModal
+        isOpen={notificationSettingsOpen}
+        onClose={() => setNotificationSettingsOpen(false)}
+        settings={notificationSettings}
+        onUpdate={updateNotificationSettings}
+        onTestWebhook={testDiscordWebhook}
         language={settings?.language}
       />
 

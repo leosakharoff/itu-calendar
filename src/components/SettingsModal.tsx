@@ -18,9 +18,10 @@ interface SettingsModalProps {
   onClose: () => void
   settings: UserSettings
   onUpdateSettings: (partial: Partial<Pick<UserSettings, 'calendar_start' | 'calendar_end' | 'week_start' | 'language'>>) => void
+  onOpenNotifications: () => void
 }
 
-export function SettingsModal({ isOpen, onClose, settings, onUpdateSettings }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, settings, onUpdateSettings, onOpenNotifications }: SettingsModalProps) {
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
   if (!isOpen) return null
@@ -69,6 +70,11 @@ export function SettingsModal({ isOpen, onClose, settings, onUpdateSettings }: S
             <option value="da">Dansk</option>
             <option value="en">English</option>
           </select>
+        </div>
+
+        <div className="settings-modal-row settings-modal-link" onClick={() => { onClose(); onOpenNotifications() }}>
+          <span className="settings-modal-label">{isEn ? 'Notifications' : 'Notifikationer'}</span>
+          <span className="settings-modal-chevron">&rsaquo;</span>
         </div>
 
         <div className="modal-actions">
