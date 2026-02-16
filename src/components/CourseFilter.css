@@ -131,12 +131,12 @@
   z-index: 100;
   display: flex;
   align-items: center;
-  padding: var(--space-sm) var(--space-md);
+  padding: calc(var(--safe-area-top) + var(--space-sm)) var(--space-md) var(--space-sm);
   background: rgba(255, 255, 255, 0.85);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--color-border);
-  height: 44px;
+  min-height: calc(44px + var(--safe-area-top));
 }
 
 .hamburger-btn {
