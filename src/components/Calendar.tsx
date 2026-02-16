@@ -306,8 +306,11 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
   const isPortraitMobile = useIsPortraitMobile()
 
   // Swipe handling refs
-  const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
+  const swipeStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
+  const swipeLockedRef = useRef<'horizontal' | 'vertical' | null>(null)
   const gridRef = useRef<HTMLDivElement>(null)
+  const [swipeOffset, setSwipeOffset] = useState(0)
+  const [isSwiping, setIsSwiping] = useState(false)
 
   // Update today marker at midnight
   useEffect(() => {
@@ -322,32 +325,72 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
     return () => clearTimeout(timeout)
   }, [todayStr])
 
-  // Swipe handlers for portrait mobile
+  // Swipe handlers for portrait mobile — finger-following
   const handleSwipeStart = useCallback((e: React.TouchEvent) => {
     if (!isPortraitMobile || draggingEventId) return
     const touch = e.touches[0]
-    swipeStartRef.current = { x: touch.clientX, y: touch.clientY }
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() }
+    swipeLockedRef.current = null
   }, [isPortraitMobile, draggingEventId])
 
-  const handleSwipeEnd = useCallback((e: React.TouchEvent) => {
+  const handleSwipeMove = useCallback((e: React.TouchEvent) => {
     if (!isPortraitMobile || !swipeStartRef.current || draggingEventId) return
-    const touch = e.changedTouches[0]
+    const touch = e.touches[0]
     const dx = touch.clientX - swipeStartRef.current.x
     const dy = touch.clientY - swipeStartRef.current.y
 
-    // Only count horizontal swipes (dx > dy threshold)
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-      if (dx < 0 && startMonthIndex < 4) {
+    // Lock direction after 10px of movement
+    if (!swipeLockedRef.current) {
+      if (Math.abs(dx) > 10 || Math.abs(dy) > 10) {
+        swipeLockedRef.current = Math.abs(dx) > Math.abs(dy) ? 'horizontal' : 'vertical'
+      }
+      return
+    }
+
+    if (swipeLockedRef.current !== 'horizontal') return
+
+    // Prevent vertical scroll while swiping horizontally
+    e.preventDefault()
+    setIsSwiping(true)
+
+    // Apply rubber-band resistance at edges
+    let offset = dx
+    if ((startMonthIndex === 0 && dx > 0) || (startMonthIndex >= 4 && dx < 0)) {
+      offset = dx * 0.3
+    }
+
+    setSwipeOffset(offset)
+  }, [isPortraitMobile, startMonthIndex, draggingEventId])
+
+  const handleSwipeEnd = useCallback((e: React.TouchEvent) => {
+    if (!isPortraitMobile || !swipeStartRef.current || draggingEventId) return
+
+    const touch = e.changedTouches[0]
+    const dx = touch.clientX - swipeStartRef.current.x
+    const elapsed = Date.now() - swipeStartRef.current.time
+    const velocity = Math.abs(dx) / elapsed // px/ms
+
+    // Snap if swiped far enough or fast enough
+    if (swipeLockedRef.current === 'horizontal') {
+      const threshold = velocity > 0.3 ? 20 : 80
+      if (dx < -threshold && startMonthIndex < 4) {
         setStartMonthIndex(prev => prev + 1)
-      } else if (dx > 0 && startMonthIndex > 0) {
+      } else if (dx > threshold && startMonthIndex > 0) {
         setStartMonthIndex(prev => prev - 1)
       }
     }
+
+    setSwipeOffset(0)
+    setIsSwiping(false)
     swipeStartRef.current = null
+    swipeLockedRef.current = null
   }, [isPortraitMobile, startMonthIndex, draggingEventId])
 
   const gridStyle = isPortraitMobile
-    ? { transform: `translateX(-${startMonthIndex * 50}%)` }
+    ? {
+        transform: `translateX(calc(-${startMonthIndex * 50}% + ${swipeOffset}px))`,
+        transition: isSwiping ? 'none' : undefined
+      }
     : undefined
 
   const pairLabel = isPortraitMobile
@@ -359,6 +402,7 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
       <div
         className={`calendar ${draggingEventId ? 'touch-dragging' : ''}`}
         onTouchStart={handleSwipeStart}
+        onTouchMove={handleSwipeMove}
         onTouchEnd={handleSwipeEnd}
       >
         <div className="calendar-grid" ref={gridRef} style={gridStyle}>
