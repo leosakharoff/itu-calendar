@@ -131,20 +131,20 @@
   z-index: 100;
   display: flex;
   align-items: center;
-  padding: calc(var(--safe-area-top) + var(--space-sm)) var(--space-md) var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
   background: rgba(255, 255, 255, 0.85);
   -webkit-backdrop-filter: blur(20px);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--color-border);
-  min-height: 44px;
+  height: 44px;
 }
 
 .hamburger-btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   background: none;
   border: none;
   cursor: pointer;
@@ -156,10 +156,10 @@
 .hamburger-icon::before,
 .hamburger-icon::after {
   display: block;
-  width: 20px;
-  height: 2px;
+  width: 22px;
+  height: 2.5px;
   background: var(--color-text-primary);
-  border-radius: 1px;
+  border-radius: 2px;
   transition: var(--transition-fast);
 }
 
@@ -175,11 +175,11 @@
 }
 
 .hamburger-icon::before {
-  top: -6px;
+  top: -7px;
 }
 
 .hamburger-icon::after {
-  top: 6px;
+  top: 7px;
 }
 
 /* ── Drawer overlay ── */
