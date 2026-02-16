@@ -133,6 +133,9 @@ Deno.serve(async (req) => {
     }
     lines.push(`SUMMARY:${escapeIcal(summary)}`)
     lines.push(`UID:${uid}`)
+    if (event.location) {
+      lines.push(`LOCATION:${escapeIcal(event.location)}`)
+    }
     if (event.notes) {
       lines.push(`DESCRIPTION:${escapeIcal(event.notes)}`)
     }

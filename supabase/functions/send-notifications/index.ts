@@ -277,8 +277,9 @@ function buildEmailSection(
       ? (e.end_time ? `${e.start_time}\u2013${e.end_time}` : e.start_time)
       : ''
     const typeTag = e.type !== 'lecture' ? ` [${e.type}]` : ''
+    const locationStr = e.location ? ` <span style="color: #888;">(${e.location})</span>` : ''
     const timeStr = time ? `<span style="color: #888;">${time}</span> ` : ''
-    return `<li style="margin: 4px 0; font-size: 14px; color: #333;">${timeStr}<strong>${e.title}</strong>${courseName}${typeTag}</li>`
+    return `<li style="margin: 4px 0; font-size: 14px; color: #333;">${timeStr}<strong>${e.title}</strong>${courseName}${locationStr}${typeTag}</li>`
   })
 
   return `<div style="margin-bottom: 16px;">
@@ -300,6 +301,7 @@ interface CalendarEvent {
   date: string
   type: string
   notes: string | null
+  location: string | null
   course_id: string | null
   start_time: string | null
   end_time: string | null
@@ -321,6 +323,7 @@ function buildEmbed(
       time ? `\`${time}\`` : '',
       `**${e.title}**`,
       courseName ? `(${courseName})` : '',
+      e.location ? `📍 ${e.location}` : '',
       e.type !== 'lecture' ? `[${e.type}]` : '',
     ].filter(Boolean)
     return parts.join(' ')

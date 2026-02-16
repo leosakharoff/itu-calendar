@@ -36,6 +36,7 @@ export function EventModal({
   const [type, setType] = useState<EventType>('lecture')
   const [courseId, setCourseId] = useState<string>('')
   const [notes, setNotes] = useState('')
+  const [location, setLocation] = useState('')
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
 
@@ -48,6 +49,7 @@ export function EventModal({
       setType(editingEvent.type)
       setCourseId(editingEvent.course_id || '')
       setNotes(editingEvent.notes || '')
+      setLocation(editingEvent.location || '')
       setStartTime(editingEvent.start_time || '')
       setEndTime(editingEvent.end_time || '')
     } else if (initialDate) {
@@ -56,6 +58,7 @@ export function EventModal({
       setType('lecture')
       setCourseId(courses[0]?.id || '')
       setNotes('')
+      setLocation('')
       setStartTime('')
       setEndTime('')
     }
@@ -73,6 +76,7 @@ export function EventModal({
       type,
       course_id: type === 'holiday' ? null : (courseId || null),
       notes: notes.trim() || null,
+      location: location.trim() || null,
       start_time: startTime || null,
       end_time: endTime || null
     })
@@ -128,6 +132,16 @@ export function EventModal({
                 onChange={e => setEndTime(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="form-group">
+            <label>Location</label>
+            <input
+              type="text"
+              value={location}
+              onChange={e => setLocation(e.target.value)}
+              placeholder="e.g., 4A14, Aud 2"
+            />
           </div>
 
           <div className="form-group">

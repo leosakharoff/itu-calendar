@@ -58,6 +58,10 @@ export function EventDetailModal({ isOpen, onClose, event, courses, isSubscribed
           </div>
         )}
 
+        {event.location && (
+          <div className="event-detail-location">{event.location}</div>
+        )}
+
         {course && (
           <div className="event-detail-course">
             <span className="event-detail-color" style={{ backgroundColor: course.color }} />

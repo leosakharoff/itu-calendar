@@ -18,6 +18,7 @@ export interface CalendarEvent {
   date: string
   type: EventType
   notes: string | null
+  location: string | null
   start_time: string | null
   end_time: string | null
   created_at: string
