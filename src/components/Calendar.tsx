@@ -495,16 +495,16 @@ export function Calendar({ events, courses, activeCourseIds, calendarStart = '20
           </div>
           <span className="month-indicator-label">{pairLabel}</span>
         </div>
-        {isPortraitMobile && (
-          <button
-            className="view-toggle-btn"
-            onClick={toggleMobileView}
-            aria-label={mobileViewMode === 1 ? 'Show 2 months' : 'Show 1 month'}
-          >
-            {mobileViewMode === 1 ? '2' : '1'}
-          </button>
-        )}
       </div>
+      {isPortraitMobile && (
+        <button
+          className="view-toggle-btn"
+          onClick={toggleMobileView}
+          aria-label={mobileViewMode === 1 ? 'Show 2 months' : 'Show 1 month'}
+        >
+          {mobileViewMode === 1 ? '2' : '1'}
+        </button>
+      )}
     </TouchDragContext.Provider>
   )
 }
