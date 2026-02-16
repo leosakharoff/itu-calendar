@@ -234,18 +234,35 @@
   }
 
   .month-header {
-    font-size: var(--font-size-xs);
-    padding: 3px var(--space-xs);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    padding: var(--space-sm) var(--space-sm);
+    letter-spacing: 0.3px;
   }
 
   .day-row {
-    min-height: 20px;
-    padding: 1px 4px;
+    min-height: 24px;
+    padding: 2px var(--space-xs);
+    font-size: var(--font-size-sm);
+  }
+
+  .day-weekday {
     font-size: var(--font-size-xs);
+    width: 14px;
+  }
+
+  .day-number {
+    font-size: var(--font-size-sm);
+    width: 20px;
   }
 
   .day-events {
-    font-size: 10px;
+    font-size: var(--font-size-xs);
+  }
+
+  .event-item {
+    padding: 1px 3px;
+    gap: 4px;
   }
 }
 
@@ -332,7 +349,7 @@
   }
 
   .month-indicator-label {
-    font-size: var(--font-size-xs);
+    font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
     font-weight: var(--font-weight-medium);
   }

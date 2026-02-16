@@ -207,9 +207,10 @@
 }
 
 .drawer-title {
-  font-size: var(--font-size-lg);
+  font-size: var(--font-size-xl);
   font-weight: var(--font-weight-semibold);
   color: var(--color-text-primary);
+  letter-spacing: -0.3px;
 }
 
 .drawer-close-btn {
@@ -245,6 +246,7 @@
   min-height: 44px;
   padding: var(--space-sm) 0;
   border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
 }
 
 .drawer-body .filter-item:active {
@@ -269,9 +271,11 @@
 .drawer-footer .user-email {
   display: block;
   color: var(--color-text-secondary);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base);
 }
 
 .drawer-footer .sign-out-btn {
   align-self: flex-start;
+  font-size: var(--font-size-base);
+  padding: var(--space-sm) var(--space-lg);
 }
