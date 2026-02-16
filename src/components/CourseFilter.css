@@ -152,34 +152,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.hamburger-icon,
-.hamburger-icon::before,
-.hamburger-icon::after {
-  display: block;
-  width: 22px;
-  height: 2.5px;
-  background: var(--color-text-primary);
-  border-radius: 2px;
-  transition: var(--transition-fast);
-}
-
-.hamburger-icon {
-  position: relative;
-}
-
-.hamburger-icon::before,
-.hamburger-icon::after {
-  content: '';
-  position: absolute;
-  left: 0;
-}
-
-.hamburger-icon::before {
-  top: -7px;
-}
-
-.hamburger-icon::after {
-  top: 7px;
+.hamburger-btn svg {
+  color: var(--color-text-primary);
 }
 
 /* ── Drawer overlay ── */

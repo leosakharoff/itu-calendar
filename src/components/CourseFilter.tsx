@@ -106,7 +106,11 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
             onClick={() => setDrawerOpen(true)}
             aria-label="Open courses menu"
           >
-            <span className="hamburger-icon" />
+            <svg width="22" height="16" viewBox="0 0 22 16" fill="none">
+              <rect y="0" width="22" height="2.5" rx="1" fill="currentColor" />
+              <rect y="6.75" width="22" height="2.5" rx="1" fill="currentColor" />
+              <rect y="13.5" width="22" height="2.5" rx="1" fill="currentColor" />
+            </svg>
           </button>
         </div>
 
