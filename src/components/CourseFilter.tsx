@@ -10,11 +10,11 @@ interface CourseFilterProps {
   onAddCourse: () => void
   onEditCourse: (course: Course) => void
   onReorderCourses: (courses: Course[]) => void
-  onSignOut?: () => void
-  userEmail?: string
+  onOpenProfile: () => void
+  userInitials: string
 }
 
-export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onSignOut, userEmail }: CourseFilterProps) {
+export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onOpenProfile, userInitials }: CourseFilterProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const dragOverId = useRef<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -112,6 +112,13 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
               <rect y="13.5" width="22" height="2.5" rx="1" fill="currentColor" />
             </svg>
           </button>
+          <button
+            className="avatar-btn"
+            onClick={onOpenProfile}
+            aria-label="Open profile"
+          >
+            <span className="avatar-initials">{userInitials}</span>
+          </button>
         </div>
 
         <div
@@ -135,14 +142,12 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
               + Add Course
             </button>
           </div>
-          {onSignOut && (
-            <div className="drawer-footer">
-              {userEmail && <span className="user-email">{userEmail}</span>}
-              <button className="sign-out-btn" onClick={onSignOut}>
-                Sign out
-              </button>
-            </div>
-          )}
+          <div className="drawer-footer">
+            <button className="drawer-profile-btn" onClick={() => { closeDrawer(); onOpenProfile() }}>
+              <span className="avatar-initials-small">{userInitials}</span>
+              Profile settings
+            </button>
+          </div>
         </div>
       </>
     )
@@ -157,14 +162,15 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
           + Add Course
         </button>
       </div>
-      {onSignOut && (
-        <div className="user-section">
-          {userEmail && <span className="user-email">{userEmail}</span>}
-          <button className="sign-out-btn" onClick={onSignOut}>
-            Sign out
-          </button>
-        </div>
-      )}
+      <div className="user-section">
+        <button
+          className="avatar-btn"
+          onClick={onOpenProfile}
+          aria-label="Open profile"
+        >
+          <span className="avatar-initials">{userInitials}</span>
+        </button>
+      </div>
     </div>
   )
 }

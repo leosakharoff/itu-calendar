@@ -3,6 +3,7 @@ import { Calendar } from './components/Calendar'
 import { CourseFilter } from './components/CourseFilter'
 import { EventModal } from './components/EventModal'
 import { CourseModal } from './components/CourseModal'
+import { ProfileModal, getInitials } from './components/ProfileModal'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { LoginPage } from './components/LoginPage'
 import { SubscribeView } from './components/SubscribeView'
@@ -24,7 +25,7 @@ function App() {
 }
 
 function MainApp() {
-  const { user, loading: authLoading, signOut } = useAuthContext()
+  const { user, loading: authLoading, signOut, updateProfile, updateEmail, updatePassword } = useAuthContext()
   const {
     courses, events, loading, error,
     addEvent, updateEvent, deleteEvent,
@@ -36,6 +37,7 @@ function MainApp() {
   const [activeCourseIds, setActiveCourseIds] = useState<Set<string>>(new Set())
   const [eventModalOpen, setEventModalOpen] = useState(false)
   const [courseModalOpen, setCourseModalOpen] = useState(false)
+  const [profileModalOpen, setProfileModalOpen] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
@@ -193,8 +195,8 @@ function MainApp() {
         onAddCourse={handleAddCourse}
         onEditCourse={handleEditCourse}
         onReorderCourses={reorderCourses}
-        onSignOut={signOut}
-        userEmail={user?.email}
+        onOpenProfile={() => setProfileModalOpen(true)}
+        userInitials={user ? getInitials(user) : '?'}
       />
       <Calendar
         events={events}
@@ -214,6 +216,17 @@ function MainApp() {
         editingEvent={editingEvent}
         isReadOnly={editingEvent ? isEventSubscribed(editingEvent) : false}
       />
+      {user && (
+        <ProfileModal
+          isOpen={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+          user={user}
+          onSignOut={signOut}
+          onUpdateProfile={updateProfile}
+          onUpdateEmail={updateEmail}
+          onUpdatePassword={updatePassword}
+        />
+      )}
       <CourseModal
         isOpen={courseModalOpen}
         onClose={() => setCourseModalOpen(false)}

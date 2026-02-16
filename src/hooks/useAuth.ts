@@ -132,6 +132,27 @@ export function useAuth() {
     if (error) throw error
   }
 
+  const updateProfile = async ({ displayName, avatarUrl }: { displayName?: string; avatarUrl?: string }) => {
+    const data: Record<string, string> = {}
+    if (displayName !== undefined) data.display_name = displayName
+    if (avatarUrl !== undefined) data.avatar_url = avatarUrl
+    const { error } = await supabase.auth.updateUser({ data })
+    if (error) throw error
+    // Refresh local user state
+    const { data: { user: refreshed } } = await supabase.auth.getUser()
+    if (refreshed) setUser(refreshed)
+  }
+
+  const updateEmail = async (newEmail: string) => {
+    const { error } = await supabase.auth.updateUser({ email: newEmail })
+    if (error) throw error
+  }
+
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (error) throw error
+  }
+
   return {
     user,
     session,
@@ -139,6 +160,9 @@ export function useAuth() {
     signInWithGoogle,
     signInWithEmail,
     signUpWithEmail,
-    signOut
+    signOut,
+    updateProfile,
+    updateEmail,
+    updatePassword
   }
 }
