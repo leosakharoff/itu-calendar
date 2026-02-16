@@ -5,7 +5,7 @@
 **Platform:** Cloudflare Pages
 **Project name:** `itu-cal`
 **Live URLs:**
-- https://calendar.leosakharoff.com
+- https://itucal.dk (primary)
 - https://itu-cal.pages.dev
 
 ### Automatic Deployment

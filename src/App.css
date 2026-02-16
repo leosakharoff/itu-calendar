@@ -1,1 +1,9 @@
-/* App styles */
+.app.loading,
+.app.error {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-md);
+  color: var(--color-text-secondary);
+}

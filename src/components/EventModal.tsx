@@ -11,6 +11,7 @@ interface EventModalProps {
   courses: Course[]
   initialDate?: Date
   editingEvent?: CalendarEvent | null
+  isReadOnly?: boolean
 }
 
 const EVENT_TYPES: { value: EventType; label: string }[] = [
@@ -28,7 +29,8 @@ export function EventModal({
   onDelete,
   courses,
   initialDate,
-  editingEvent
+  editingEvent,
+  isReadOnly
 }: EventModalProps) {
   const [title, setTitle] = useState('')
   const [date, setDate] = useState('')
@@ -75,6 +77,47 @@ export function EventModal({
     }
   }
 
+  // Read-only view for events from subscribed courses
+  if (isReadOnly && editingEvent) {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <h3>Event Details</h3>
+
+          <p className="subscribed-notice">This event is from a subscribed course.</p>
+
+          <div className="form-group">
+            <label>Title</label>
+            <input type="text" value={title} readOnly disabled />
+          </div>
+
+          <div className="form-group">
+            <label>Date</label>
+            <input type="date" value={date} readOnly disabled />
+          </div>
+
+          <div className="form-group">
+            <label>Type</label>
+            <input type="text" value={EVENT_TYPES.find(t => t.value === type)?.label || type} readOnly disabled />
+          </div>
+
+          {notes && (
+            <div className="form-group">
+              <label>Notes</label>
+              <textarea value={notes} readOnly disabled rows={3} />
+            </div>
+          )}
+
+          <div className="modal-actions">
+            <div className="right-actions">
+              <button type="button" onClick={onClose}>Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -114,7 +157,7 @@ export function EventModal({
               <label>Course</label>
               <select value={courseId} onChange={e => setCourseId(e.target.value)}>
                 <option value="">No course</option>
-                {courses.map(c => (
+                {courses.filter(c => !c.isSubscribed).map(c => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>

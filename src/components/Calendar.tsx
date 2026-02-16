@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, createContext, useContext } from 'react'
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react'
 import { generateCalendarData, formatDateForDB, type MonthData, type DayInfo } from '../lib/dates'
 import type { Course, CalendarEvent } from '../types/database'
 import './Calendar.css'
@@ -17,6 +17,8 @@ const TouchDragContext = createContext<TouchDragContextType>({
   dropTargetDate: null,
   setDropTargetDate: () => {},
 })
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun']
 
 interface CalendarProps {
   events: CalendarEvent[]
@@ -125,7 +127,17 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
     onDayClick?.(day.date)
   }
 
+  const isSubscribedEvent = (event: CalendarEvent) => {
+    if (!event.course_id) return false
+    const course = courses.find(c => c.id === event.course_id)
+    return course?.isSubscribed === true
+  }
+
   const handleDragStart = (e: React.DragEvent, event: CalendarEvent) => {
+    if (isSubscribedEvent(event)) {
+      e.preventDefault()
+      return
+    }
     e.dataTransfer.setData('text/plain', event.id)
     e.dataTransfer.effectAllowed = 'move'
   }
@@ -151,6 +163,7 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
 
   // Touch event handlers for mobile drag
   const handleTouchStart = (e: React.TouchEvent, event: CalendarEvent) => {
+    if (isSubscribedEvent(event)) return
     const touch = e.touches[0]
     touchStartRef.current = { x: touch.clientX, y: touch.clientY, time: Date.now() }
 
@@ -229,12 +242,14 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
       <span className="day-weekday">{day.weekday}</span>
       <span className="day-number">{day.day}</span>
       <div className="day-events">
-        {events.map((event) => (
+        {events.map((event) => {
+          const subscribed = isSubscribedEvent(event)
+          return (
           <div
             key={event.id}
             className={`event-item ${event.notes ? 'has-notes' : ''} ${draggingEventId === event.id ? 'dragging' : ''}`}
             title={event.notes ? `${event.title}\n${event.notes}` : event.title}
-            draggable
+            draggable={!subscribed}
             onDragStart={(e) => handleDragStart(e, event)}
             onTouchStart={(e) => handleTouchStart(e, event)}
             onTouchMove={handleTouchMove}
@@ -251,7 +266,8 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
             />
             <span className="event-label">{event.title}</span>
           </div>
-        ))}
+          )
+        })}
       </div>
       {day.isLastDayOfWeek && (
         <span className="week-number">{day.weekNumber}</span>
@@ -260,11 +276,38 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
   )
 }
 
+function useIsPortraitMobile() {
+  const [isPortrait, setIsPortrait] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 768 && window.matchMedia('(orientation: portrait)').matches
+  })
+
+  useEffect(() => {
+    const check = () => {
+      setIsPortrait(window.innerWidth <= 768 && window.matchMedia('(orientation: portrait)').matches)
+    }
+    window.addEventListener('resize', check)
+    window.addEventListener('orientationchange', check)
+    return () => {
+      window.removeEventListener('resize', check)
+      window.removeEventListener('orientationchange', check)
+    }
+  }, [])
+
+  return isPortrait
+}
+
 export function Calendar({ events, courses, activeCourseIds, onDayClick, onEventClick, onEventMove }: CalendarProps) {
   const months = generateCalendarData()
   const [todayStr, setTodayStr] = useState(() => formatDateForDB(new Date()))
   const [draggingEventId, setDraggingEventId] = useState<string | null>(null)
   const [dropTargetDate, setDropTargetDate] = useState<string | null>(null)
+  const [startMonthIndex, setStartMonthIndex] = useState(0)
+  const isPortraitMobile = useIsPortraitMobile()
+
+  // Swipe handling refs
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null)
+  const gridRef = useRef<HTMLDivElement>(null)
 
   // Update today marker at midnight
   useEffect(() => {
@@ -279,10 +322,46 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
     return () => clearTimeout(timeout)
   }, [todayStr])
 
+  // Swipe handlers for portrait mobile
+  const handleSwipeStart = useCallback((e: React.TouchEvent) => {
+    if (!isPortraitMobile || draggingEventId) return
+    const touch = e.touches[0]
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY }
+  }, [isPortraitMobile, draggingEventId])
+
+  const handleSwipeEnd = useCallback((e: React.TouchEvent) => {
+    if (!isPortraitMobile || !swipeStartRef.current || draggingEventId) return
+    const touch = e.changedTouches[0]
+    const dx = touch.clientX - swipeStartRef.current.x
+    const dy = touch.clientY - swipeStartRef.current.y
+
+    // Only count horizontal swipes (dx > dy threshold)
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0 && startMonthIndex < 4) {
+        setStartMonthIndex(prev => prev + 1)
+      } else if (dx > 0 && startMonthIndex > 0) {
+        setStartMonthIndex(prev => prev - 1)
+      }
+    }
+    swipeStartRef.current = null
+  }, [isPortraitMobile, startMonthIndex, draggingEventId])
+
+  const gridStyle = isPortraitMobile
+    ? { transform: `translateX(-${startMonthIndex * 100}%)` }
+    : undefined
+
+  const pairLabel = isPortraitMobile
+    ? `${MONTH_NAMES[startMonthIndex]} — ${MONTH_NAMES[startMonthIndex + 1]}`
+    : ''
+
   return (
     <TouchDragContext.Provider value={{ draggingEventId, setDraggingEventId, dropTargetDate, setDropTargetDate }}>
-      <div className={`calendar ${draggingEventId ? 'touch-dragging' : ''}`}>
-        <div className="calendar-grid">
+      <div
+        className={`calendar ${draggingEventId ? 'touch-dragging' : ''}`}
+        onTouchStart={handleSwipeStart}
+        onTouchEnd={handleSwipeEnd}
+      >
+        <div className="calendar-grid" ref={gridRef} style={gridStyle}>
           {months.map((month) => (
             <MonthColumn
               key={month.name}
@@ -296,6 +375,18 @@ export function Calendar({ events, courses, activeCourseIds, onDayClick, onEvent
               onEventMove={onEventMove}
             />
           ))}
+        </div>
+        <div className="month-indicator">
+          <div className="month-indicator-dots">
+            {[0, 1, 2, 3, 4].map(i => (
+              <button
+                key={i}
+                className={`month-indicator-dot ${i === startMonthIndex ? 'active' : ''}`}
+                onClick={() => setStartMonthIndex(i)}
+              />
+            ))}
+          </div>
+          <span className="month-indicator-label">{pairLabel}</span>
         </div>
       </div>
     </TouchDragContext.Provider>

@@ -1,21 +1,36 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Calendar } from './components/Calendar'
 import { CourseFilter } from './components/CourseFilter'
 import { EventModal } from './components/EventModal'
 import { CourseModal } from './components/CourseModal'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { LoginPage } from './components/LoginPage'
+import { SubscribeView } from './components/SubscribeView'
 import { useCalendarData } from './hooks/useCalendarData'
 import { useAuthContext } from './contexts/AuthContext'
 import type { CalendarEvent, Course } from './types/database'
 import './App.css'
 
 function App() {
+  // Check if this is a /subscribe route
+  const params = new URLSearchParams(window.location.search)
+  const subscribeToken = window.location.pathname === '/subscribe' ? params.get('token') : null
+
+  if (subscribeToken) {
+    return <SubscribeView token={subscribeToken} />
+  }
+
+  return <MainApp />
+}
+
+function MainApp() {
   const { user, loading: authLoading, signOut } = useAuthContext()
   const {
     courses, events, loading, error,
     addEvent, updateEvent, deleteEvent,
-    addCourse, updateCourse, deleteCourse, reorderCourses
+    addCourse, updateCourse, deleteCourse, reorderCourses,
+    getShareForCourse, createShare, toggleShare,
+    subscribeToShareCopy, subscribeToShareLive, isEventSubscribed
   } = useCalendarData(user?.id)
 
   const [activeCourseIds, setActiveCourseIds] = useState<Set<string>>(new Set())
@@ -24,13 +39,26 @@ function App() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+  const prevUserIdRef = useRef(user?.id)
 
-  // Initialize active courses when data loads
-  useMemo(() => {
-    if (courses.length > 0 && activeCourseIds.size === 0) {
-      setActiveCourseIds(new Set(courses.filter(c => c.active).map(c => c.id)))
+  // Reset active courses when user changes or courses load
+  useEffect(() => {
+    const userChanged = prevUserIdRef.current !== user?.id
+    prevUserIdRef.current = user?.id
+
+    if (userChanged) {
+      setActiveCourseIds(new Set())
     }
-  }, [courses, activeCourseIds.size])
+
+    if (courses.length > 0) {
+      setActiveCourseIds(prev => {
+        if (prev.size === 0 || userChanged) {
+          return new Set(courses.filter(c => c.active).map(c => c.id))
+        }
+        return prev
+      })
+    }
+  }, [courses, user?.id])
 
   const toggleCourse = (courseId: string) => {
     setActiveCourseIds(prev => {
@@ -91,7 +119,7 @@ function App() {
 
   const handleEventMove = async (eventId: string, newDate: string) => {
     const event = events.find(e => e.id === eventId)
-    if (event) {
+    if (event && !isEventSubscribed(event)) {
       try {
         await updateEvent(eventId, { ...event, date: newDate })
       } catch (err) {
@@ -146,7 +174,7 @@ function App() {
     return <LoginPage />
   }
 
-  if (loading) {
+  if (loading && courses.length === 0) {
     return <div className="app loading">Loading calendar...</div>
   }
 
@@ -184,6 +212,7 @@ function App() {
         courses={courses}
         initialDate={selectedDate}
         editingEvent={editingEvent}
+        isReadOnly={editingEvent ? isEventSubscribed(editingEvent) : false}
       />
       <CourseModal
         isOpen={courseModalOpen}
@@ -191,6 +220,19 @@ function App() {
         onSave={handleSaveCourse}
         onDelete={editingCourse ? handleDeleteCourse : undefined}
         editingCourse={editingCourse}
+        onGetShare={getShareForCourse}
+        onCreateShare={createShare}
+        onToggleShare={toggleShare}
+        onSubscribeToShareLive={async (token) => {
+          const course = await subscribeToShareLive(token)
+          setActiveCourseIds(prev => new Set([...prev, course.id]))
+          return course
+        }}
+        onSubscribeToShareCopy={async (token) => {
+          const course = await subscribeToShareCopy(token)
+          setActiveCourseIds(prev => new Set([...prev, course.id]))
+          return course
+        }}
       />
     </div>
   )

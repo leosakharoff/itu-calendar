@@ -3,18 +3,20 @@
   top: 0;
   left: 0;
   right: 0;
-  background: #f59e0b;
-  color: #1a1a1a;
-  padding: 8px 16px;
+  background: rgba(245, 158, 11, 0.95);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  padding: calc(var(--safe-area-top) + 8px) var(--space-lg) var(--space-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  z-index: 1000;
+  gap: var(--space-sm);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-medium);
+  z-index: 1001;
 }
 
 .offline-icon {
-  font-size: 16px;
+  font-size: var(--font-size-lg);
 }
