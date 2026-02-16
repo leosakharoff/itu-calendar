@@ -1,8 +1,18 @@
 import { useState } from 'react'
-import type { NotificationSettings } from '../types/database'
+import type { NotificationSettings, EventType } from '../types/database'
 import type { Language } from '../lib/dates'
 import { useBottomSheetDismiss } from '../hooks/useBottomSheetDismiss'
 import './NotificationSettingsModal.css'
+
+const ALL_EVENT_TYPES: EventType[] = ['lecture', 'deliverable', 'exam', 'presentation', 'holiday']
+
+const EVENT_TYPE_LABELS: Record<EventType, { da: string; en: string }> = {
+  lecture: { da: 'Forel\u00e6sninger', en: 'Lectures' },
+  deliverable: { da: 'Afleveringer', en: 'Deliverables' },
+  exam: { da: 'Eksamener', en: 'Exams' },
+  presentation: { da: 'Pr\u00e6sentationer', en: 'Presentations' },
+  holiday: { da: 'Helligdage', en: 'Holidays' },
+}
 
 interface NotificationSettingsModalProps {
   isOpen: boolean
@@ -10,17 +20,21 @@ interface NotificationSettingsModalProps {
   settings: NotificationSettings | null
   onUpdate: (partial: Partial<Omit<NotificationSettings, 'id' | 'user_id' | 'created_at'>>) => void
   onTestWebhook: () => Promise<{ ok: boolean; error?: string }>
+  onTestSms: () => Promise<{ ok: boolean; error?: string }>
   language?: Language
 }
 
-export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate, onTestWebhook, language = 'da' }: NotificationSettingsModalProps) {
+export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate, onTestWebhook, onTestSms, language = 'da' }: NotificationSettingsModalProps) {
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
   const [testResult, setTestResult] = useState<{ ok: boolean; error?: string } | null>(null)
   const [testing, setTesting] = useState(false)
+  const [smsTestResult, setSmsTestResult] = useState<{ ok: boolean; error?: string } | null>(null)
+  const [smsTesting, setSmsTesting] = useState(false)
 
   if (!isOpen || !settings) return null
 
   const isEn = language === 'en'
+  const eventTypes = settings.notify_event_types ?? ['deliverable', 'exam']
 
   const handleTest = async () => {
     setTesting(true)
@@ -28,6 +42,24 @@ export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate,
     const result = await onTestWebhook()
     setTestResult(result)
     setTesting(false)
+  }
+
+  const handleSmsTest = async () => {
+    setSmsTesting(true)
+    setSmsTestResult(null)
+    const result = await onTestSms()
+    setSmsTestResult(result)
+    setSmsTesting(false)
+  }
+
+  const toggleEventType = (type: EventType) => {
+    const current = new Set(eventTypes)
+    if (current.has(type)) {
+      current.delete(type)
+    } else {
+      current.add(type)
+    }
+    onUpdate({ notify_event_types: [...current] })
   }
 
   return (
@@ -71,6 +103,68 @@ export function NotificationSettingsModal({ isOpen, onClose, settings, onUpdate,
                   {testResult.ok
                     ? (isEn ? 'Message sent!' : 'Besked sendt!')
                     : (isEn ? `Failed: ${testResult.error}` : `Fejl: ${testResult.error}`)}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Event Types section */}
+        <div className="notification-section">
+          <div className="notification-section-title">{isEn ? 'Event Types' : 'Begivenhedstyper'}</div>
+          <div className="notification-event-types">
+            {ALL_EVENT_TYPES.map(type => (
+              <button
+                key={type}
+                type="button"
+                className={`notification-event-type-pill ${eventTypes.includes(type) ? 'selected' : ''}`}
+                onClick={() => toggleEventType(type)}
+              >
+                {isEn ? EVENT_TYPE_LABELS[type].en : EVENT_TYPE_LABELS[type].da}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* SMS section */}
+        <div className="notification-section">
+          <div className="notification-section-title">SMS</div>
+
+          <div className="notification-row">
+            <span className="notification-row-label">{isEn ? 'Send via SMS' : 'Send via SMS'}</span>
+            <button
+              type="button"
+              className={`notification-toggle ${settings.sms_enabled ? 'active' : ''}`}
+              onClick={() => onUpdate({ sms_enabled: !settings.sms_enabled })}
+              aria-label="Toggle SMS notifications"
+            />
+          </div>
+
+          {settings.sms_enabled && (
+            <>
+              <input
+                type="tel"
+                className="notification-webhook-input"
+                placeholder="+45 12 34 56 78"
+                value={settings.sms_phone_number || ''}
+                onChange={e => onUpdate({ sms_phone_number: e.target.value || null })}
+              />
+              <div className="notification-phone-hint">
+                {isEn ? 'International format (e.g., +45 for Denmark)' : 'Internationalt format (f.eks. +45 for Danmark)'}
+              </div>
+              <button
+                type="button"
+                className="notification-test-btn"
+                onClick={handleSmsTest}
+                disabled={smsTesting || !settings.sms_phone_number}
+              >
+                {smsTesting ? (isEn ? 'Sending...' : 'Sender...') : 'Test'}
+              </button>
+              {smsTestResult && (
+                <div className={`notification-test-result ${smsTestResult.ok ? 'success' : 'error'}`}>
+                  {smsTestResult.ok
+                    ? (isEn ? 'SMS sent!' : 'SMS sendt!')
+                    : (isEn ? `Failed: ${smsTestResult.error}` : `Fejl: ${smsTestResult.error}`)}
                 </div>
               )}
             </>

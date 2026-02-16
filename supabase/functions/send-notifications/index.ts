@@ -15,27 +15,72 @@ Deno.serve(async (req) => {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders })
   }
 
-  // Verify authorization (service role key or cron secret)
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+  // Parse body for test mode check
+  let body: Record<string, unknown> = {}
+  try {
+    body = await req.json()
+  } catch {
+    // empty body is fine for cron invocations
+  }
+
+  // --- Test mode: authenticated user can send a test SMS ---
+  if (body.test_mode && body.test_type === 'sms') {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const phone = body.test_phone as string
+    if (!phone) {
+      return new Response(JSON.stringify({ error: 'No phone number provided' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    try {
+      await sendSms(phone, 'ITU Calendar — Test: Your SMS notifications are working!')
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    } catch (err) {
+      return new Response(JSON.stringify({ error: (err as Error).message }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+  }
+
+  // --- Normal cron mode: verify authorization ---
   const authHeader = req.headers.get('Authorization')
   const cronSecret = Deno.env.get('CRON_SECRET')
   if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    // Also allow service role key via supabase
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     if (authHeader !== `Bearer ${supabaseServiceKey}`) {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }
   }
 
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
-  // Get all users with Discord notifications enabled
+  // Get all users with any notification channel enabled
   const { data: notifSettings, error: settingsError } = await supabase
     .from('notification_settings')
     .select('*')
-    .eq('discord_enabled', true)
-    .not('discord_webhook_url', 'is', null)
+    .or('discord_enabled.eq.true,sms_enabled.eq.true')
 
   if (settingsError) {
     return new Response(JSON.stringify({ error: 'Failed to fetch notification settings' }), {
@@ -45,7 +90,7 @@ Deno.serve(async (req) => {
   }
 
   if (!notifSettings || notifSettings.length === 0) {
-    return new Response(JSON.stringify({ sent: 0, message: 'No users with Discord enabled' }), {
+    return new Response(JSON.stringify({ sent: 0, message: 'No users with notifications enabled' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
@@ -90,44 +135,66 @@ Deno.serve(async (req) => {
 
       if (!events || events.length === 0) continue
 
+      // Filter events by user's selected event types
+      const allowedTypes: string[] = ns.notify_event_types ?? ['deliverable', 'exam']
+      const filteredEvents = events.filter((e: CalendarEvent) => allowedTypes.includes(e.type))
+
+      if (filteredEvents.length === 0) continue
+
       // Group events by date
-      const todayEvents = events.filter((e: { date: string }) => e.date === todayStr)
-      const tomorrowEvents = events.filter((e: { date: string }) => e.date === tomorrowStr)
+      const todayEvents = filteredEvents.filter((e: CalendarEvent) => e.date === todayStr)
+      const tomorrowEvents = filteredEvents.filter((e: CalendarEvent) => e.date === tomorrowStr)
 
-      // Build Discord embeds
-      const embeds: DiscordEmbed[] = []
+      // --- Send Discord ---
+      if (ns.discord_enabled && ns.discord_webhook_url) {
+        const embeds: DiscordEmbed[] = []
 
-      if (todayEvents.length > 0 && ns.notify_same_day) {
-        embeds.push(buildEmbed(
-          `Today — ${todayStr}`,
-          todayEvents,
-          courseMap,
-          0x007AFF, // blue
-        ))
+        if (todayEvents.length > 0 && ns.notify_same_day) {
+          embeds.push(buildEmbed(`Today — ${todayStr}`, todayEvents, courseMap, 0x007AFF))
+        }
+
+        if (tomorrowEvents.length > 0 && ns.notify_day_before) {
+          embeds.push(buildEmbed(`Tomorrow — ${tomorrowStr}`, tomorrowEvents, courseMap, 0xFF9500))
+        }
+
+        if (embeds.length > 0) {
+          try {
+            const res = await fetch(ns.discord_webhook_url, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ embeds }),
+            })
+            if (res.ok) totalSent++
+            else errors.push(`User ${ns.user_id}: Discord returned ${res.status}`)
+          } catch (err) {
+            errors.push(`User ${ns.user_id}: Discord error: ${(err as Error).message}`)
+          }
+        }
       }
 
-      if (tomorrowEvents.length > 0 && ns.notify_day_before) {
-        embeds.push(buildEmbed(
-          `Tomorrow — ${tomorrowStr}`,
-          tomorrowEvents,
-          courseMap,
-          0xFF9500, // orange
-        ))
-      }
+      // --- Send SMS ---
+      if (ns.sms_enabled && ns.sms_phone_number) {
+        const lines: string[] = []
 
-      if (embeds.length === 0) continue
+        if (todayEvents.length > 0 && ns.notify_same_day) {
+          lines.push(`Today (${todayStr}):`)
+          lines.push(...buildSmsLines(todayEvents, courseMap))
+        }
 
-      // Send to Discord
-      const res = await fetch(ns.discord_webhook_url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ embeds }),
-      })
+        if (tomorrowEvents.length > 0 && ns.notify_day_before) {
+          if (lines.length > 0) lines.push('')
+          lines.push(`Tomorrow (${tomorrowStr}):`)
+          lines.push(...buildSmsLines(tomorrowEvents, courseMap))
+        }
 
-      if (res.ok) {
-        totalSent++
-      } else {
-        errors.push(`User ${ns.user_id}: Discord returned ${res.status}`)
+        if (lines.length > 0) {
+          try {
+            await sendSms(ns.sms_phone_number, lines.join('\n'))
+            totalSent++
+          } catch (err) {
+            errors.push(`User ${ns.user_id}: SMS error: ${(err as Error).message}`)
+          }
+        }
       }
     } catch (err) {
       errors.push(`User ${ns.user_id}: ${(err as Error).message}`)
@@ -138,6 +205,8 @@ Deno.serve(async (req) => {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   })
 })
+
+// --- Types ---
 
 interface DiscordEmbed {
   title: string
@@ -156,6 +225,8 @@ interface CalendarEvent {
   start_time: string | null
   end_time: string | null
 }
+
+// --- Discord helpers ---
 
 function buildEmbed(
   title: string,
@@ -185,6 +256,63 @@ function buildEmbed(
     footer: { text: 'ITU Calendar' },
   }
 }
+
+// --- SMS helpers ---
+
+function buildSmsLines(
+  events: CalendarEvent[],
+  courseMap: Map<string, { name: string; color: string }>,
+): string[] {
+  return events.map(e => {
+    const course = e.course_id ? courseMap.get(e.course_id) : null
+    const courseName = course ? course.name : ''
+    const time = e.start_time
+      ? (e.end_time ? `${e.start_time}-${e.end_time}` : e.start_time)
+      : ''
+    const parts = [
+      '•',
+      time || '',
+      e.title,
+      courseName ? `(${courseName})` : '',
+      e.type !== 'lecture' ? `[${e.type}]` : '',
+    ].filter(Boolean)
+    return parts.join(' ')
+  })
+}
+
+async function sendSms(to: string, body: string): Promise<void> {
+  const accountSid = Deno.env.get('TWILIO_ACCOUNT_SID')
+  const authToken = Deno.env.get('TWILIO_AUTH_TOKEN')
+  const from = Deno.env.get('TWILIO_PHONE_NUMBER')
+
+  if (!accountSid || !authToken || !from) {
+    throw new Error('Twilio credentials not configured')
+  }
+
+  const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`
+  const encoded = btoa(`${accountSid}:${authToken}`)
+
+  const params = new URLSearchParams()
+  params.set('To', to)
+  params.set('From', from)
+  params.set('Body', body)
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${encoded}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.message || `Twilio returned ${res.status}`)
+  }
+}
+
+// --- Utilities ---
 
 function formatDate(d: Date): string {
   const y = d.getFullYear()
