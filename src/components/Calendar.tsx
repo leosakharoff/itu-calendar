@@ -90,7 +90,14 @@ function MonthColumn({ month, events, courses, activeCourseIds, todayStr, onDayC
           }
           const dayEvents = monthEvents
             .filter(e => e.date === dayDateStr)
-            .sort((a, b) => (eventTypeOrder[a.type] ?? 5) - (eventTypeOrder[b.type] ?? 5))
+            .sort((a, b) => {
+              const aHasTime = !!a.start_time
+              const bHasTime = !!b.start_time
+              if (aHasTime && !bHasTime) return -1
+              if (!aHasTime && bHasTime) return 1
+              if (aHasTime && bHasTime) return a.start_time!.localeCompare(b.start_time!)
+              return (eventTypeOrder[a.type] ?? 5) - (eventTypeOrder[b.type] ?? 5)
+            })
           const isToday = dayDateStr === todayStr
 
           return (

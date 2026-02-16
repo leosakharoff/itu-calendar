@@ -135,6 +135,15 @@
   background: rgba(255, 59, 48, 0.15);
 }
 
+.form-group-row {
+  display: flex;
+  gap: var(--space-md);
+}
+
+.form-group-row .form-group {
+  flex: 1;
+}
+
 /* Color picker */
 .color-picker {
   display: flex;

@@ -115,13 +115,22 @@ Deno.serve(async (req) => {
   const allEvents = [...(events || []), ...(holidays || [])]
 
   for (const event of allEvents) {
-    const dtstart = event.date.replace(/-/g, '')
+    const dateCompact = event.date.replace(/-/g, '')
     const uid = `${event.id}@itu-cal`
     const courseName = event.course_id ? courseMap.get(event.course_id)?.name : null
     const summary = courseName ? `${courseName}: ${event.title}` : event.title
 
     lines.push('BEGIN:VEVENT')
-    lines.push(`DTSTART;VALUE=DATE:${dtstart}`)
+    if (event.start_time) {
+      const timeCompact = event.start_time.replace(/:/g, '') + '00'
+      lines.push(`DTSTART:${dateCompact}T${timeCompact}`)
+    } else {
+      lines.push(`DTSTART;VALUE=DATE:${dateCompact}`)
+    }
+    if (event.end_time) {
+      const endTimeCompact = event.end_time.replace(/:/g, '') + '00'
+      lines.push(`DTEND:${dateCompact}T${endTimeCompact}`)
+    }
     lines.push(`SUMMARY:${escapeIcal(summary)}`)
     lines.push(`UID:${uid}`)
     if (event.notes) {

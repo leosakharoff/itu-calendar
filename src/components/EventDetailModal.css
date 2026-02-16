@@ -57,6 +57,11 @@
   color: var(--color-text-secondary);
 }
 
+.event-detail-time {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
 .event-detail-course {
   display: flex;
   align-items: center;

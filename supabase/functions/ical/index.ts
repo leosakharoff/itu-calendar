@@ -65,11 +65,20 @@ Deno.serve(async (req) => {
   ]
 
   for (const event of events || []) {
-    const dtstart = event.date.replace(/-/g, '')
+    const dateCompact = event.date.replace(/-/g, '')
     const uid = `${event.id}@itu-cal`
 
     lines.push('BEGIN:VEVENT')
-    lines.push(`DTSTART;VALUE=DATE:${dtstart}`)
+    if (event.start_time) {
+      const timeCompact = event.start_time.replace(/:/g, '') + '00'
+      lines.push(`DTSTART:${dateCompact}T${timeCompact}`)
+    } else {
+      lines.push(`DTSTART;VALUE=DATE:${dateCompact}`)
+    }
+    if (event.end_time) {
+      const endTimeCompact = event.end_time.replace(/:/g, '') + '00'
+      lines.push(`DTEND:${dateCompact}T${endTimeCompact}`)
+    }
     lines.push(`SUMMARY:${escapeIcal(event.title)}`)
     lines.push(`UID:${uid}`)
     if (event.notes) {

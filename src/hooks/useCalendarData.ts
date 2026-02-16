@@ -219,7 +219,14 @@ export function useCalendarData(userId?: string) {
       .single()
 
     if (error) throw error
-    setEvents(prev => [...prev, data].sort((a, b) => a.date.localeCompare(b.date)))
+    setEvents(prev => [...prev, data].sort((a, b) => {
+      const dateCmp = a.date.localeCompare(b.date)
+      if (dateCmp !== 0) return dateCmp
+      if (a.start_time && !b.start_time) return -1
+      if (!a.start_time && b.start_time) return 1
+      if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time)
+      return 0
+    }))
     return data
   }
 
@@ -241,7 +248,14 @@ export function useCalendarData(userId?: string) {
       .single()
 
     if (error) throw error
-    setEvents(prev => prev.map(e => e.id === id ? data : e).sort((a, b) => a.date.localeCompare(b.date)))
+    setEvents(prev => prev.map(e => e.id === id ? data : e).sort((a, b) => {
+      const dateCmp = a.date.localeCompare(b.date)
+      if (dateCmp !== 0) return dateCmp
+      if (a.start_time && !b.start_time) return -1
+      if (!a.start_time && b.start_time) return 1
+      if (a.start_time && b.start_time) return a.start_time.localeCompare(b.start_time)
+      return 0
+    }))
     return data
   }
 

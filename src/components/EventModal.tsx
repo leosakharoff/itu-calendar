@@ -36,6 +36,8 @@ export function EventModal({
   const [type, setType] = useState<EventType>('lecture')
   const [courseId, setCourseId] = useState<string>('')
   const [notes, setNotes] = useState('')
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
 
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
@@ -46,12 +48,16 @@ export function EventModal({
       setType(editingEvent.type)
       setCourseId(editingEvent.course_id || '')
       setNotes(editingEvent.notes || '')
+      setStartTime(editingEvent.start_time || '')
+      setEndTime(editingEvent.end_time || '')
     } else if (initialDate) {
       setTitle('')
       setDate(formatDateForDB(initialDate))
       setType('lecture')
       setCourseId(courses[0]?.id || '')
       setNotes('')
+      setStartTime('')
+      setEndTime('')
     }
   }, [editingEvent, initialDate, courses])
 
@@ -66,7 +72,9 @@ export function EventModal({
       date,
       type,
       course_id: type === 'holiday' ? null : (courseId || null),
-      notes: notes.trim() || null
+      notes: notes.trim() || null,
+      start_time: startTime || null,
+      end_time: endTime || null
     })
     onClose()
   }
@@ -101,6 +109,25 @@ export function EventModal({
               value={date}
               onChange={e => setDate(e.target.value)}
             />
+          </div>
+
+          <div className="form-group-row">
+            <div className="form-group">
+              <label>Start time</label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={e => setStartTime(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label>End time</label>
+              <input
+                type="time"
+                value={endTime}
+                onChange={e => setEndTime(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="form-group">

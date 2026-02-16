@@ -48,6 +48,16 @@ export function EventDetailModal({ isOpen, onClose, event, courses, isSubscribed
 
         <div className="event-detail-date">{dateStr}</div>
 
+        {(event.start_time || event.end_time) && (
+          <div className="event-detail-time">
+            {event.start_time && event.end_time
+              ? `${event.start_time} \u2013 ${event.end_time}`
+              : event.start_time
+                ? event.start_time
+                : `\u2013 ${event.end_time}`}
+          </div>
+        )}
+
         {course && (
           <div className="event-detail-course">
             <span className="event-detail-color" style={{ backgroundColor: course.color }} />

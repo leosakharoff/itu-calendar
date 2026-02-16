@@ -18,6 +18,8 @@ export interface CalendarEvent {
   date: string
   type: EventType
   notes: string | null
+  start_time: string | null
+  end_time: string | null
   created_at: string
 }
 
@@ -38,6 +40,17 @@ export interface Subscription {
   source_user_id: string
   active: boolean
   sort_order: number
+  created_at: string
+}
+
+export interface NotificationSettings {
+  id: string
+  user_id: string
+  discord_webhook_url: string | null
+  discord_enabled: boolean
+  notify_day_before: boolean
+  notify_same_day: boolean
+  notify_time: string // 'HH:MM'
   created_at: string
 }
 
