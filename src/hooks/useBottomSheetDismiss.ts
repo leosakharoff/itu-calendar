@@ -24,6 +24,11 @@ export function useBottomSheetDismiss(isOpen: boolean, onClose: () => void): Bot
       setIsDragging(false)
       setDismissing(false)
 
+      // Scroll sheet to top on open
+      requestAnimationFrame(() => {
+        if (sheetRef.current) sheetRef.current.scrollTop = 0
+      })
+
       // Lock body scroll — iOS needs position:fixed to truly prevent scroll
       const scrollY = window.scrollY
       document.body.style.position = 'fixed'
