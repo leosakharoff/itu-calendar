@@ -7,6 +7,8 @@ export interface Course {
   active: boolean
   sort_order: number
   created_at: string
+  isSubscribed?: boolean
+  subscriptionId?: string | null
 }
 
 export interface CalendarEvent {
@@ -16,5 +18,25 @@ export interface CalendarEvent {
   date: string
   type: EventType
   notes: string | null
+  created_at: string
+}
+
+export interface SharedCalendar {
+  id: string
+  user_id: string
+  course_id: string
+  share_token: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface Subscription {
+  id: string
+  subscriber_id: string
+  shared_calendar_id: string
+  source_course_id: string
+  source_user_id: string
+  active: boolean
+  sort_order: number
   created_at: string
 }
