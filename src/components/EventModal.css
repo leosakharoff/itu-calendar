@@ -5,6 +5,8 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +83,7 @@
 .form-group textarea:focus {
   outline: none;
   border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.12);
+  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.15);
 }
 
 .modal-actions {
@@ -112,7 +114,7 @@
 }
 
 .modal-actions button:hover {
-  background: var(--color-border-strong);
+  background: rgba(0, 0, 0, 0.08);
 }
 
 .modal-actions .save-btn {

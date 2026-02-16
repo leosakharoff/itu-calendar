@@ -1,17 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import type { Course, UserSettings } from '../types/database'
+import type { Course } from '../types/database'
+import type { Language } from '../lib/dates'
 import './CourseFilter.css'
-
-const MONTH_OPTIONS = [
-  { value: '01', label: 'Jan' }, { value: '02', label: 'Feb' },
-  { value: '03', label: 'Mar' }, { value: '04', label: 'Apr' },
-  { value: '05', label: 'May' }, { value: '06', label: 'Jun' },
-  { value: '07', label: 'Jul' }, { value: '08', label: 'Aug' },
-  { value: '09', label: 'Sep' }, { value: '10', label: 'Oct' },
-  { value: '11', label: 'Nov' }, { value: '12', label: 'Dec' },
-]
-
-const YEAR_OPTIONS = ['2025', '2026', '2027', '2028']
 
 interface CourseFilterProps {
   courses: Course[]
@@ -22,18 +12,21 @@ interface CourseFilterProps {
   onEditCourse: (course: Course) => void
   onReorderCourses: (courses: Course[]) => void
   onOpenProfile: () => void
+  onOpenSettings: () => void
+  onOpenShare: () => void
   userInitials: string
   avatarUrl?: string
   monthPairLabel?: string
-  settings?: UserSettings | null
-  onUpdateSettings?: (partial: Partial<Pick<UserSettings, 'calendar_start' | 'calendar_end' | 'week_start' | 'language'>>) => void
+  language?: Language
 }
 
-export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onOpenProfile, userInitials, avatarUrl, monthPairLabel, settings, onUpdateSettings }: CourseFilterProps) {
+export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAddCourse, onEditCourse, onReorderCourses, onOpenProfile, onOpenSettings, onOpenShare, userInitials, avatarUrl, monthPairLabel, language = 'da' }: CourseFilterProps) {
   const [draggedId, setDraggedId] = useState<string | null>(null)
   const dragOverId = useRef<string | null>(null)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+
+  const isEn = language === 'en'
 
   useEffect(() => {
     const onResize = () => {
@@ -51,6 +44,48 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
   }, [drawerOpen])
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), [])
+
+  // Edge swipe to open drawer (mobile only)
+  useEffect(() => {
+    if (!isMobile || drawerOpen) return
+
+    let startX = 0
+    let startY = 0
+    let tracking = false
+
+    const onTouchStart = (e: TouchEvent) => {
+      const touch = e.touches[0]
+      if (touch.clientX <= 20) {
+        startX = touch.clientX
+        startY = touch.clientY
+        tracking = true
+      }
+    }
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (!tracking) return
+      const touch = e.touches[0]
+      const dx = touch.clientX - startX
+      const dy = Math.abs(touch.clientY - startY)
+      if (dx > 50 && dy < 30) {
+        setDrawerOpen(true)
+        tracking = false
+      }
+    }
+
+    const onTouchEnd = () => {
+      tracking = false
+    }
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true })
+    document.addEventListener('touchmove', onTouchMove, { passive: true })
+    document.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart)
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [isMobile, drawerOpen])
 
   const handleDragStart = (e: React.DragEvent, courseId: string) => {
     setDraggedId(courseId)
@@ -112,67 +147,6 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
       </label>
     ))
 
-  const startMonth = settings?.calendar_start?.split('-')[1] || '01'
-  const startYear = settings?.calendar_start?.split('-')[0] || '2026'
-  const endMonth = settings?.calendar_end?.split('-')[1] || '06'
-  const endYear = settings?.calendar_end?.split('-')[0] || '2026'
-
-  const settingsSection = settings && onUpdateSettings ? (
-    <div className="settings-section">
-      <div className="settings-title">Settings</div>
-      <div className="settings-row">
-        <span className="settings-label">{settings.language === 'en' ? 'Date range' : 'Datointerval'}</span>
-        <div className="settings-range">
-          <select
-            value={startMonth}
-            onChange={e => onUpdateSettings({ calendar_start: `${startYear}-${e.target.value}` })}
-          >
-            {MONTH_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-          <select
-            value={startYear}
-            onChange={e => onUpdateSettings({ calendar_start: `${e.target.value}-${startMonth}` })}
-          >
-            {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <span className="settings-range-sep">—</span>
-          <select
-            value={endMonth}
-            onChange={e => onUpdateSettings({ calendar_end: `${endYear}-${e.target.value}` })}
-          >
-            {MONTH_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-          <select
-            value={endYear}
-            onChange={e => onUpdateSettings({ calendar_end: `${e.target.value}-${endMonth}` })}
-          >
-            {YEAR_OPTIONS.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-      </div>
-      <div className="settings-row">
-        <span className="settings-label">{settings.language === 'en' ? 'Week starts' : 'Uge starter'}</span>
-        <select
-          value={settings.week_start}
-          onChange={e => onUpdateSettings({ week_start: e.target.value as 'monday' | 'sunday' })}
-        >
-          <option value="monday">{settings.language === 'en' ? 'Monday' : 'Mandag'}</option>
-          <option value="sunday">{settings.language === 'en' ? 'Sunday' : 'Søndag'}</option>
-        </select>
-      </div>
-      <div className="settings-row">
-        <span className="settings-label">{settings.language === 'en' ? 'Language' : 'Sprog'}</span>
-        <select
-          value={settings.language}
-          onChange={e => onUpdateSettings({ language: e.target.value as 'da' | 'en' })}
-        >
-          <option value="da">Dansk</option>
-          <option value="en">English</option>
-        </select>
-      </div>
-    </div>
-  ) : null
-
   if (isMobile) {
     return (
       <>
@@ -210,7 +184,7 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
         />
         <div className={`drawer-panel ${drawerOpen ? 'open' : ''}`}>
           <div className="drawer-header">
-            <span className="drawer-title">{settings?.language === 'en' ? 'Courses' : 'Kurser'}</span>
+            <span className="drawer-title">{isEn ? 'Courses' : 'Kurser'}</span>
             <button
               className="drawer-close-btn"
               onClick={closeDrawer}
@@ -222,18 +196,32 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
           <div className="drawer-body">
             {courseItems(true)}
             <button className="add-course-btn" onClick={onAddCourse}>
-              + {settings?.language === 'en' ? 'Add Course' : 'Tilføj kursus'}
+              + {isEn ? 'Add Course' : 'Tilf\u00f8j kursus'}
             </button>
-            {settingsSection}
+            <button className="drawer-share-btn" onClick={() => { closeDrawer(); onOpenShare() }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" y1="2" x2="12" y2="15"/>
+              </svg>
+              {isEn ? 'Share calendar' : 'Del kalender'}
+            </button>
           </div>
           <div className="drawer-footer">
+            <button className="drawer-settings-btn" onClick={() => { closeDrawer(); onOpenSettings() }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+              </svg>
+              {isEn ? 'Settings' : 'Indstillinger'}
+            </button>
             <button className="drawer-profile-btn" onClick={() => { closeDrawer(); onOpenProfile() }}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt="" className="avatar-img-small" />
               ) : (
                 <span className="avatar-initials-small">{userInitials}</span>
               )}
-              {settings?.language === 'en' ? 'Profile settings' : 'Profilindstillinger'}
+              {isEn ? 'Profile' : 'Profil'}
             </button>
           </div>
         </div>
@@ -243,15 +231,37 @@ export function CourseFilter({ courses, activeCourseIds, onToggle, onSolo, onAdd
 
   return (
     <div className="course-filter">
-      <div className="filter-label">{settings?.language === 'en' ? 'Courses:' : 'Kurser:'}</div>
+      <div className="filter-label">{isEn ? 'Courses:' : 'Kurser:'}</div>
       <div className="filter-items">
         {courseItems(false)}
         <button className="add-course-btn" onClick={onAddCourse}>
-          + {settings?.language === 'en' ? 'Add Course' : 'Tilføj kursus'}
+          + {isEn ? 'Add Course' : 'Tilf\u00f8j kursus'}
         </button>
       </div>
-      {settingsSection}
       <div className="user-section">
+        <button
+          className="icon-btn"
+          onClick={onOpenShare}
+          aria-label="Share"
+          title={isEn ? 'Share calendar' : 'Del kalender'}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+            <polyline points="16 6 12 2 8 6"/>
+            <line x1="12" y1="2" x2="12" y2="15"/>
+          </svg>
+        </button>
+        <button
+          className="icon-btn"
+          onClick={onOpenSettings}
+          aria-label="Settings"
+          title={isEn ? 'Settings' : 'Indstillinger'}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+          </svg>
+        </button>
         <button
           className="avatar-btn"
           onClick={onOpenProfile}

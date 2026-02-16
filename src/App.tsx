@@ -2,8 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { Calendar } from './components/Calendar'
 import { CourseFilter } from './components/CourseFilter'
 import { EventModal } from './components/EventModal'
+import { EventDetailModal } from './components/EventDetailModal'
 import { CourseModal } from './components/CourseModal'
 import { ProfileModal, getInitials } from './components/ProfileModal'
+import { SettingsModal } from './components/SettingsModal'
+import { ShareModal } from './components/ShareModal'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { LoginPage } from './components/LoginPage'
 import { SubscribeView } from './components/SubscribeView'
@@ -38,11 +41,15 @@ function MainApp() {
 
   const [activeCourseIds, setActiveCourseIds] = useState<Set<string>>(new Set())
   const [eventModalOpen, setEventModalOpen] = useState(false)
+  const [eventDetailOpen, setEventDetailOpen] = useState(false)
   const [courseModalOpen, setCourseModalOpen] = useState(false)
   const [profileModalOpen, setProfileModalOpen] = useState(false)
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false)
+  const [shareModalOpen, setShareModalOpen] = useState(false)
   const [monthPairLabel, setMonthPairLabel] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
+  const [viewingEvent, setViewingEvent] = useState<CalendarEvent | null>(null)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
   const prevUserIdRef = useRef(user?.id)
 
@@ -95,8 +102,24 @@ function MainApp() {
   }
 
   const handleEventClick = (event: CalendarEvent) => {
-    setEditingEvent(event)
-    setSelectedDate(undefined)
+    // Always open detail modal first (read-only view)
+    setViewingEvent(event)
+    setEventDetailOpen(true)
+  }
+
+  const handleEditFromDetail = () => {
+    // Close detail modal, open edit modal
+    if (viewingEvent) {
+      setEditingEvent(viewingEvent)
+      setSelectedDate(undefined)
+      setEventDetailOpen(false)
+      setEventModalOpen(true)
+    }
+  }
+
+  const handleFabClick = () => {
+    setSelectedDate(new Date())
+    setEditingEvent(null)
     setEventModalOpen(true)
   }
 
@@ -199,11 +222,12 @@ function MainApp() {
         onEditCourse={handleEditCourse}
         onReorderCourses={reorderCourses}
         onOpenProfile={() => setProfileModalOpen(true)}
+        onOpenSettings={() => setSettingsModalOpen(true)}
+        onOpenShare={() => setShareModalOpen(true)}
         userInitials={user ? getInitials(user) : '?'}
         avatarUrl={user?.user_metadata?.avatar_url || undefined}
         monthPairLabel={monthPairLabel}
-        settings={settings}
-        onUpdateSettings={updateSettings}
+        language={settings?.language}
       />
       <Calendar
         events={events}
@@ -218,6 +242,27 @@ function MainApp() {
         onEventMove={handleEventMove}
         onMonthPairChange={setMonthPairLabel}
       />
+
+      {/* FAB — add event */}
+      <button className="fab" onClick={handleFabClick} aria-label="Add event">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+      </button>
+
+      {/* Event detail (read-only) */}
+      <EventDetailModal
+        isOpen={eventDetailOpen}
+        onClose={() => setEventDetailOpen(false)}
+        event={viewingEvent}
+        courses={courses}
+        isSubscribed={viewingEvent ? isEventSubscribed(viewingEvent) : false}
+        onEdit={handleEditFromDetail}
+        language={settings?.language}
+      />
+
+      {/* Event create/edit */}
       <EventModal
         isOpen={eventModalOpen}
         onClose={() => setEventModalOpen(false)}
@@ -226,8 +271,8 @@ function MainApp() {
         courses={courses}
         initialDate={selectedDate}
         editingEvent={editingEvent}
-        isReadOnly={editingEvent ? isEventSubscribed(editingEvent) : false}
       />
+
       {user && (
         <ProfileModal
           isOpen={profileModalOpen}
@@ -239,6 +284,27 @@ function MainApp() {
           onUpdatePassword={updatePassword}
         />
       )}
+
+      {settings && (
+        <SettingsModal
+          isOpen={settingsModalOpen}
+          onClose={() => setSettingsModalOpen(false)}
+          settings={settings}
+          onUpdateSettings={updateSettings}
+        />
+      )}
+
+      <ShareModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        courses={courses}
+        userId={user?.id}
+        onGetShare={getShareForCourse}
+        onCreateShare={createShare}
+        onToggleShare={toggleShare}
+        language={settings?.language}
+      />
+
       <CourseModal
         isOpen={courseModalOpen}
         onClose={() => setCourseModalOpen(false)}

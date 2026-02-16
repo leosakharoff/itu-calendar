@@ -230,6 +230,7 @@ function DayRow({ day, isOddWeek, isToday, events, courses, onDayClick, onEventC
 
   const classes = ['day-row']
   if (isOddWeek) classes.push('odd-week')
+  if (day.isLastDayOfWeek) classes.push('week-end')
   if (isToday) classes.push('today')
   if (isDragOver || isTouchDragOver) classes.push('drag-over')
 
@@ -312,24 +313,39 @@ export function Calendar({ events, courses, activeCourseIds, calendarStart = '20
   const [dropTargetDate, setDropTargetDate] = useState<string | null>(null)
   const isPortraitMobile = useIsPortraitMobile()
 
+  // Mobile view mode: 1 or 2 months at a time
+  const [mobileViewMode, setMobileViewMode] = useState<1 | 2>(() => {
+    if (typeof window === 'undefined') return 2
+    const stored = localStorage.getItem('itu-cal-mobile-view')
+    return stored === '1' ? 1 : 2
+  })
+
+  const toggleMobileView = useCallback(() => {
+    setMobileViewMode(prev => {
+      const next = prev === 1 ? 2 : 1
+      localStorage.setItem('itu-cal-mobile-view', String(next))
+      return next
+    })
+  }, [])
+
   // Calculate initial month index: try to show current month if in range
   const getInitialMonthIndex = useCallback(() => {
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
     const idx = months.findIndex(m => m.year === currentYear && m.month === currentMonth)
-    // Clamp to valid pair range (can't go past second-to-last)
-    const maxIdx = Math.max(0, months.length - 2)
+    // Clamp to valid range
+    const maxIdx = Math.max(0, months.length - (mobileViewMode === 1 ? 1 : 2))
     if (idx >= 0) return Math.min(idx, maxIdx)
     return 0
-  }, [months])
+  }, [months, mobileViewMode])
 
   const [startMonthIndex, setStartMonthIndex] = useState(getInitialMonthIndex)
 
-  // Max index for month pair navigation
-  const maxMonthIndex = Math.max(0, months.length - 2)
+  // Max index for navigation
+  const maxMonthIndex = Math.max(0, months.length - (isPortraitMobile && mobileViewMode === 1 ? 1 : 2))
 
-  // Clamp startMonthIndex when range changes
+  // Clamp startMonthIndex when range or mode changes
   useEffect(() => {
     setStartMonthIndex(prev => Math.min(prev, maxMonthIndex))
   }, [maxMonthIndex])
@@ -415,15 +431,20 @@ export function Calendar({ events, courses, activeCourseIds, calendarStart = '20
     swipeLockedRef.current = null
   }, [isPortraitMobile, startMonthIndex, maxMonthIndex, draggingEventId])
 
+  // Calculate column width percentage based on view mode
+  const colWidth = isPortraitMobile && mobileViewMode === 1 ? 100 : 50
+
   const gridStyle = isPortraitMobile
     ? {
-        transform: `translateX(calc(-${startMonthIndex * 50}% + ${swipeOffset}px))`,
+        transform: `translateX(calc(-${startMonthIndex * colWidth}% + ${swipeOffset}px))`,
         transition: isSwiping ? 'none' : undefined
       }
     : undefined
 
   const pairLabel = isPortraitMobile
-    ? `${monthNames[startMonthIndex]} — ${monthNames[startMonthIndex + 1]}`
+    ? mobileViewMode === 1
+      ? monthNames[startMonthIndex]
+      : `${monthNames[startMonthIndex]} \u2014 ${monthNames[startMonthIndex + 1]}`
     : ''
 
   useEffect(() => {
@@ -435,7 +456,7 @@ export function Calendar({ events, courses, activeCourseIds, calendarStart = '20
   return (
     <TouchDragContext.Provider value={{ draggingEventId, setDraggingEventId, dropTargetDate, setDropTargetDate }}>
       <div
-        className={`calendar ${draggingEventId ? 'touch-dragging' : ''}`}
+        className={`calendar ${draggingEventId ? 'touch-dragging' : ''} ${isPortraitMobile && mobileViewMode === 1 ? 'single-month' : ''}`}
         onTouchStart={handleSwipeStart}
         onTouchMove={handleSwipeMove}
         onTouchEnd={handleSwipeEnd}
@@ -467,6 +488,15 @@ export function Calendar({ events, courses, activeCourseIds, calendarStart = '20
           </div>
           <span className="month-indicator-label">{pairLabel}</span>
         </div>
+        {isPortraitMobile && (
+          <button
+            className="view-toggle-btn"
+            onClick={toggleMobileView}
+            aria-label={mobileViewMode === 1 ? 'Show 2 months' : 'Show 1 month'}
+          >
+            {mobileViewMode === 1 ? '2' : '1'}
+          </button>
+        )}
       </div>
     </TouchDragContext.Provider>
   )

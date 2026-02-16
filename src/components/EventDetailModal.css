@@ -1,0 +1,90 @@
+.event-detail-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.event-detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.event-detail-header h3 {
+  margin: 0;
+  flex: 1;
+}
+
+.event-detail-type {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.event-detail-type.lecture {
+  color: #2e7d32;
+  background: rgba(76, 175, 80, 0.12);
+}
+
+.event-detail-type.deliverable {
+  color: #c62828;
+  background: rgba(211, 47, 47, 0.1);
+}
+
+.event-detail-type.exam {
+  color: #1565c0;
+  background: rgba(25, 118, 210, 0.1);
+}
+
+.event-detail-type.presentation {
+  color: #6a1b9a;
+  background: rgba(156, 39, 176, 0.1);
+}
+
+.event-detail-type.holiday {
+  color: #e65100;
+  background: rgba(255, 152, 0, 0.1);
+}
+
+.event-detail-date {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+.event-detail-course {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+}
+
+.event-detail-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.event-detail-notes {
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  padding: var(--space-md);
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-sm);
+  white-space: pre-wrap;
+}
+
+@media (max-width: 768px) {
+  .event-detail-header {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+}

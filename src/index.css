@@ -4,7 +4,7 @@
   --color-text-secondary: #8e8e93;
   --color-text-tertiary: #aeaeb2;
   --color-bg: #ffffff;
-  --color-bg-secondary: #f9f9f9;
+  --color-bg-secondary: #f5f5f7;
   --color-bg-tertiary: #f2f2f7;
   --color-border: rgba(0, 0, 0, 0.08);
   --color-border-strong: rgba(0, 0, 0, 0.15);
@@ -26,7 +26,7 @@
   --radius-md: 8px;
   --radius-lg: 10px;
   --radius-xl: 14px;
-  --radius-sheet: 16px;
+  --radius-sheet: 20px;
 
   /* Typography */
   --font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
@@ -47,10 +47,10 @@
   --transition-slow: 350ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
-  --shadow-sheet: 0 -4px 24px rgba(0, 0, 0, 0.12);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-sheet: 0 -2px 8px rgba(0, 0, 0, 0.04), 0 -4px 24px rgba(0, 0, 0, 0.12);
 
   /* Safe areas */
   --safe-area-top: env(safe-area-inset-top, 0px);

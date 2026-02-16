@@ -48,5 +48,6 @@ export interface UserSettings {
   calendar_end: string   // 'YYYY-MM'
   week_start: 'monday' | 'sunday'
   language: 'da' | 'en'
+  combined_share_token?: string | null
   created_at: string
 }

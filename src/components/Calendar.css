@@ -26,7 +26,7 @@
   background: var(--color-bg-tertiary);
   text-align: center;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   color: var(--color-text-primary);
 }
 
@@ -39,7 +39,7 @@
   display: flex;
   align-items: flex-start;
   padding: 2px 6px;
-  min-height: 22px;
+  min-height: 24px;
   font-size: var(--font-size-sm);
   position: relative;
   background: var(--color-bg);
@@ -58,6 +58,10 @@
 
 .day-row.odd-week:hover {
   background-color: var(--color-bg-tertiary);
+}
+
+.day-row.week-end {
+  border-bottom: 1px solid var(--color-border);
 }
 
 .day-row.today {
@@ -147,7 +151,7 @@
 }
 
 .event-item:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.035);
 }
 
 .event-label {
@@ -352,5 +356,56 @@
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
     font-weight: var(--font-weight-medium);
+  }
+
+  /* Single month mode */
+  .calendar.single-month .calendar-grid .month-column {
+    min-width: 100%;
+    flex: 0 0 100%;
+    border-radius: var(--radius-md);
+    border-right: 1px solid var(--color-border);
+  }
+
+  .calendar.single-month .calendar-grid .month-column:nth-child(odd) {
+    border-radius: var(--radius-md);
+  }
+
+  .calendar.single-month .calendar-grid .month-column:nth-child(even) {
+    border-radius: var(--radius-md);
+  }
+}
+
+/* View toggle button (bottom-left) */
+.view-toggle-btn {
+  display: none;
+}
+
+@media (max-width: 768px) and (orientation: portrait) {
+  .view-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    bottom: calc(var(--safe-area-bottom) + 16px);
+    left: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.85);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+    z-index: 90;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+    -webkit-tap-highlight-color: transparent;
+    transition: all var(--transition-fast);
+  }
+
+  .view-toggle-btn:active {
+    transform: scale(0.9);
   }
 }
