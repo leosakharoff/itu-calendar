@@ -119,19 +119,25 @@ export function EventModal({
           <div className="form-group-row">
             <div className="form-group">
               <label>Start time</label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={e => setStartTime(e.target.value)}
-              />
+              <div className="time-input-wrapper">
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={e => setStartTime(e.target.value)}
+                />
+                {startTime && <button type="button" className="time-clear-btn" onClick={() => setStartTime('')}>{'\u2715'}</button>}
+              </div>
             </div>
             <div className="form-group">
               <label>End time</label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={e => setEndTime(e.target.value)}
-              />
+              <div className="time-input-wrapper">
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={e => setEndTime(e.target.value)}
+                />
+                {endTime && <button type="button" className="time-clear-btn" onClick={() => setEndTime('')}>{'\u2715'}</button>}
+              </div>
             </div>
           </div>
 
