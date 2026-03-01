@@ -7,6 +7,7 @@ const DEFAULTS: Omit<UserSettings, 'id' | 'user_id' | 'created_at'> = {
   calendar_end: '2026-06',
   week_start: 'monday',
   language: 'da',
+  hidden_event_types: [],
 }
 
 export function useSettings(userId: string | undefined) {
@@ -14,11 +15,7 @@ export function useSettings(userId: string | undefined) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!userId) {
-      setSettings(null)
-      setLoading(false)
-      return
-    }
+    if (!userId) return
 
     let cancelled = false
 
@@ -67,7 +64,7 @@ export function useSettings(userId: string | undefined) {
     return () => { cancelled = true }
   }, [userId])
 
-  const updateSettings = useCallback(async (partial: Partial<Pick<UserSettings, 'calendar_start' | 'calendar_end' | 'week_start' | 'language'>>) => {
+  const updateSettings = useCallback(async (partial: Partial<Pick<UserSettings, 'calendar_start' | 'calendar_end' | 'week_start' | 'language' | 'hidden_event_types'>>) => {
     if (!settings || !userId) return
 
     // Optimistic update

@@ -12,6 +12,7 @@ interface EventModalProps {
   courses: Course[]
   initialDate?: Date
   editingEvent?: CalendarEvent | null
+  hiddenEventTypes?: EventType[]
 }
 
 const EVENT_TYPES: { value: EventType; label: string }[] = [
@@ -19,6 +20,7 @@ const EVENT_TYPES: { value: EventType; label: string }[] = [
   { value: 'deliverable', label: 'Deliverable' },
   { value: 'exam', label: 'Exam' },
   { value: 'presentation', label: 'Presentation' },
+  { value: 'meeting', label: 'Meeting' },
   { value: 'holiday', label: 'Holiday' }
 ]
 
@@ -29,7 +31,8 @@ export function EventModal({
   onDelete,
   courses,
   initialDate,
-  editingEvent
+  editingEvent,
+  hiddenEventTypes
 }: EventModalProps) {
   const [title, setTitle] = useState('')
   const [date, setDate] = useState('')
@@ -53,16 +56,18 @@ export function EventModal({
       setStartTime(editingEvent.start_time || '')
       setEndTime(editingEvent.end_time || '')
     } else if (initialDate) {
+      const hidden = hiddenEventTypes ?? []
+      const firstVisible = EVENT_TYPES.find(t => !hidden.includes(t.value))
       setTitle('')
       setDate(formatDateForDB(initialDate))
-      setType('lecture')
+      setType(firstVisible?.value ?? 'lecture')
       setCourseId(courses[0]?.id || '')
       setNotes('')
       setLocation('')
       setStartTime('')
       setEndTime('')
     }
-  }, [editingEvent, initialDate, courses])
+  }, [editingEvent, initialDate, courses, hiddenEventTypes])
 
   if (!isOpen) return null
 
@@ -118,19 +123,25 @@ export function EventModal({
           <div className="form-group-row">
             <div className="form-group">
               <label>Start time</label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={e => setStartTime(e.target.value)}
-              />
+              <div className="time-input-wrapper">
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={e => setStartTime(e.target.value)}
+                />
+                {startTime && <button type="button" className="time-clear-btn" onClick={() => setStartTime('')}>{'\u2715'}</button>}
+              </div>
             </div>
             <div className="form-group">
               <label>End time</label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={e => setEndTime(e.target.value)}
-              />
+              <div className="time-input-wrapper">
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={e => setEndTime(e.target.value)}
+                />
+                {endTime && <button type="button" className="time-clear-btn" onClick={() => setEndTime('')}>{'\u2715'}</button>}
+              </div>
             </div>
           </div>
 
@@ -147,7 +158,7 @@ export function EventModal({
           <div className="form-group">
             <label>Type</label>
             <select value={type} onChange={e => setType(e.target.value as EventType)}>
-              {EVENT_TYPES.map(t => (
+              {EVENT_TYPES.filter(t => !hiddenEventTypes?.includes(t.value) || t.value === type).map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>

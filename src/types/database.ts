@@ -1,4 +1,4 @@
-export type EventType = 'lecture' | 'deliverable' | 'exam' | 'presentation' | 'holiday'
+export type EventType = 'lecture' | 'deliverable' | 'exam' | 'presentation' | 'meeting' | 'holiday'
 
 export interface Course {
   id: string
@@ -65,5 +65,6 @@ export interface UserSettings {
   week_start: 'monday' | 'sunday'
   language: 'da' | 'en'
   combined_share_token?: string | null
+  hidden_event_types: EventType[]
   created_at: string
 }
