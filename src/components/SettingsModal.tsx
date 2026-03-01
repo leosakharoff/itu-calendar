@@ -7,11 +7,12 @@ interface SettingsModalProps {
   onClose: () => void
   settings: UserSettings
   onOpenCalendarSettings: () => void
+  onOpenEventTypes: () => void
   onOpenNotifications: () => void
   onOpenAbout: () => void
 }
 
-export function SettingsModal({ isOpen, onClose, settings, onOpenCalendarSettings, onOpenNotifications, onOpenAbout }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, settings, onOpenCalendarSettings, onOpenEventTypes, onOpenNotifications, onOpenAbout }: SettingsModalProps) {
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
   if (!isOpen) return null
@@ -25,6 +26,11 @@ export function SettingsModal({ isOpen, onClose, settings, onOpenCalendarSetting
 
         <div className="settings-modal-row settings-modal-link" onClick={() => { onClose(); onOpenCalendarSettings() }}>
           <span className="settings-modal-label">{isEn ? 'Calendar' : 'Kalender'}</span>
+          <span className="settings-modal-chevron">&rsaquo;</span>
+        </div>
+
+        <div className="settings-modal-row settings-modal-link" onClick={() => { onClose(); onOpenEventTypes() }}>
+          <span className="settings-modal-label">{isEn ? 'Event Types' : 'Begivenhedstyper'}</span>
           <span className="settings-modal-chevron">&rsaquo;</span>
         </div>
 
