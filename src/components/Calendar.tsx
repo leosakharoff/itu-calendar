@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, createContext, useContext } from 'react'
 import { generateCalendarData, getLocalizedNames, formatDateForDB, type MonthData, type DayInfo, type Language, type WeekStart } from '../lib/dates'
-import type { Course, CalendarEvent } from '../types/database'
+import type { Course, CalendarEvent, EventType } from '../types/database'
 import './Calendar.css'
 
 // Context for touch drag state
@@ -28,6 +28,7 @@ interface CalendarProps {
   language?: Language
   onDayClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
+  hiddenEventTypes?: EventType[]
   onEventMove?: (eventId: string, newDate: string) => void
   onMonthPairChange?: (label: string) => void
 }
@@ -37,6 +38,7 @@ interface MonthColumnProps {
   events: CalendarEvent[]
   courses: Course[]
   activeCourseIds: Set<string>
+  hiddenSet: Set<EventType>
   todayStr: string
   onDayClick?: (date: Date) => void
   onEventClick?: (event: CalendarEvent) => void
@@ -54,12 +56,13 @@ interface DayRowProps {
   onEventMove?: (eventId: string, newDate: string) => void
 }
 
-function MonthColumn({ month, events, courses, activeCourseIds, todayStr, onDayClick, onEventClick, onEventMove }: MonthColumnProps) {
+function MonthColumn({ month, events, courses, activeCourseIds, hiddenSet, todayStr, onDayClick, onEventClick, onEventMove }: MonthColumnProps) {
   let currentWeek = -1
   let weekIndex = 0
 
   // Filter events for this month and active courses
   const monthEvents = events.filter(e => {
+    if (hiddenSet.has(e.type)) return false
     const eventDate = new Date(e.date)
     const inMonth = eventDate.getFullYear() === month.year && eventDate.getMonth() === month.month
     const isHoliday = e.type === 'holiday'
@@ -309,9 +312,10 @@ function useIsPortraitMobile() {
   return isPortrait
 }
 
-export function Calendar({ events, courses, activeCourseIds, calendarStart = '2026-01', calendarEnd = '2026-06', weekStart = 'monday', language = 'da', onDayClick, onEventClick, onEventMove, onMonthPairChange }: CalendarProps) {
+export function Calendar({ events, courses, activeCourseIds, calendarStart = '2026-01', calendarEnd = '2026-06', weekStart = 'monday', language = 'da', hiddenEventTypes, onDayClick, onEventClick, onEventMove, onMonthPairChange }: CalendarProps) {
   const months = generateCalendarData(calendarStart, calendarEnd, language, weekStart)
   const { monthsShort } = getLocalizedNames(language)
+  const hiddenSet = useMemo(() => new Set(hiddenEventTypes), [hiddenEventTypes])
 
   // Build abbreviated month names for the current range
   const monthNames = months.map(m => monthsShort[m.month])
@@ -477,6 +481,7 @@ export function Calendar({ events, courses, activeCourseIds, calendarStart = '20
               events={events}
               courses={courses}
               activeCourseIds={activeCourseIds}
+              hiddenSet={hiddenSet}
               todayStr={todayStr}
               onDayClick={onDayClick}
               onEventClick={onEventClick}

@@ -8,6 +8,7 @@ import { ProfileModal, getInitials } from './components/ProfileModal'
 import { SettingsModal } from './components/SettingsModal'
 import { CalendarSettingsModal } from './components/CalendarSettingsModal'
 import { NotificationSettingsModal } from './components/NotificationSettingsModal'
+import { EventTypesSettingsModal } from './components/EventTypesSettingsModal'
 import { AboutModal } from './components/AboutModal'
 import { ShareModal } from './components/ShareModal'
 import { OfflineIndicator } from './components/OfflineIndicator'
@@ -54,6 +55,7 @@ function MainApp() {
   const [calendarSettingsOpen, setCalendarSettingsOpen] = useState(false)
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false)
   const [aboutModalOpen, setAboutModalOpen] = useState(false)
+  const [eventTypesSettingsOpen, setEventTypesSettingsOpen] = useState(false)
   const [monthPairLabel, setMonthPairLabel] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
@@ -246,6 +248,7 @@ function MainApp() {
         calendarEnd={settings?.calendar_end}
         weekStart={settings?.week_start}
         language={settings?.language}
+        hiddenEventTypes={settings?.hidden_event_types}
         onDayClick={handleDayClick}
         onEventClick={handleEventClick}
         onEventMove={handleEventMove}
@@ -280,6 +283,7 @@ function MainApp() {
         courses={courses}
         initialDate={selectedDate}
         editingEvent={editingEvent}
+        hiddenEventTypes={settings?.hidden_event_types}
       />
 
       {user && (
@@ -301,6 +305,7 @@ function MainApp() {
             onClose={() => setSettingsModalOpen(false)}
             settings={settings}
             onOpenCalendarSettings={() => setCalendarSettingsOpen(true)}
+            onOpenEventTypes={() => setEventTypesSettingsOpen(true)}
             onOpenNotifications={() => setNotificationSettingsOpen(true)}
             onOpenAbout={() => setAboutModalOpen(true)}
           />
@@ -310,6 +315,14 @@ function MainApp() {
             onBack={() => setSettingsModalOpen(true)}
             settings={settings}
             onUpdateSettings={updateSettings}
+          />
+          <EventTypesSettingsModal
+            isOpen={eventTypesSettingsOpen}
+            onClose={() => setEventTypesSettingsOpen(false)}
+            onBack={() => setSettingsModalOpen(true)}
+            settings={settings}
+            onUpdateSettings={updateSettings}
+            language={settings.language}
           />
         </>
       )}

@@ -12,6 +12,7 @@ interface EventModalProps {
   courses: Course[]
   initialDate?: Date
   editingEvent?: CalendarEvent | null
+  hiddenEventTypes?: EventType[]
 }
 
 const EVENT_TYPES: { value: EventType; label: string }[] = [
@@ -30,7 +31,8 @@ export function EventModal({
   onDelete,
   courses,
   initialDate,
-  editingEvent
+  editingEvent,
+  hiddenEventTypes
 }: EventModalProps) {
   const [title, setTitle] = useState('')
   const [date, setDate] = useState('')
@@ -54,16 +56,18 @@ export function EventModal({
       setStartTime(editingEvent.start_time || '')
       setEndTime(editingEvent.end_time || '')
     } else if (initialDate) {
+      const hidden = hiddenEventTypes ?? []
+      const firstVisible = EVENT_TYPES.find(t => !hidden.includes(t.value))
       setTitle('')
       setDate(formatDateForDB(initialDate))
-      setType('lecture')
+      setType(firstVisible?.value ?? 'lecture')
       setCourseId(courses[0]?.id || '')
       setNotes('')
       setLocation('')
       setStartTime('')
       setEndTime('')
     }
-  }, [editingEvent, initialDate, courses])
+  }, [editingEvent, initialDate, courses, hiddenEventTypes])
 
   if (!isOpen) return null
 
@@ -154,7 +158,7 @@ export function EventModal({
           <div className="form-group">
             <label>Type</label>
             <select value={type} onChange={e => setType(e.target.value as EventType)}>
-              {EVENT_TYPES.map(t => (
+              {EVENT_TYPES.filter(t => !hiddenEventTypes?.includes(t.value) || t.value === type).map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>
               ))}
             </select>
