@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
+import type { Language } from '../lib/dates'
 import './OfflineIndicator.css'
 
-export function OfflineIndicator() {
+interface OfflineIndicatorProps {
+  language?: Language
+}
+
+export function OfflineIndicator({ language = 'da' }: OfflineIndicatorProps) {
   const [isOffline, setIsOffline] = useState(!navigator.onLine)
 
   useEffect(() => {
@@ -19,10 +24,12 @@ export function OfflineIndicator() {
 
   if (!isOffline) return null
 
+  const isEn = language === 'en'
+
   return (
     <div className="offline-indicator">
-      <span className="offline-icon">⚡</span>
-      <span>You're offline — showing cached data</span>
+      <span className="offline-icon">{'\u26a1'}</span>
+      <span>{isEn ? "You're offline \u2014 showing cached data" : 'Du er offline \u2014 viser cachelagret data'}</span>
     </div>
   )
 }

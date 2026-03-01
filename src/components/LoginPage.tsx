@@ -11,6 +11,8 @@ export function LoginPage() {
   const [message, setMessage] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
+  const isEn = navigator.language.startsWith('en')
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {
@@ -20,12 +22,12 @@ export function LoginPage() {
 
       if (isSignUp) {
         await signUpWithEmail(email, password)
-        setMessage('Check your email to confirm your account')
+        setMessage(isEn ? 'Check your email to confirm your account' : 'Tjek din email for at bekr\u00e6fte din konto')
       } else {
         await signInWithEmail(email, password)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to sign in')
+      setError(err instanceof Error ? err.message : (isEn ? 'Failed to sign in' : 'Kunne ikke logge ind'))
     } finally {
       setLoading(false)
     }
@@ -35,7 +37,10 @@ export function LoginPage() {
     <div className="login-page">
       <div className="login-container">
         <h1>ITU Calendar</h1>
-        <p>{isSignUp ? 'Create an account' : 'Sign in to manage your course schedule'}</p>
+        <p>{isSignUp
+          ? (isEn ? 'Create an account' : 'Opret en konto')
+          : (isEn ? 'Sign in to manage your course schedule' : 'Log ind for at administrere dit kursusplan')
+        }</p>
 
         {error && <div className="login-error">{error}</div>}
         {message && <div className="login-message">{message}</div>}
@@ -50,21 +55,29 @@ export function LoginPage() {
           />
           <input
             type="password"
-            placeholder="Password"
+            placeholder={isEn ? 'Password' : 'Adgangskode'}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
           />
           <button type="submit" disabled={loading}>
-            {loading ? 'Please wait...' : (isSignUp ? 'Sign up' : 'Sign in')}
+            {loading
+              ? (isEn ? 'Please wait...' : 'Vent venligst...')
+              : (isSignUp
+                ? (isEn ? 'Sign up' : 'Opret konto')
+                : (isEn ? 'Sign in' : 'Log ind'))
+            }
           </button>
         </form>
 
         <div className="toggle-mode">
-          {isSignUp ? 'Already have an account?' : "Don't have an account?"}
+          {isSignUp
+            ? (isEn ? 'Already have an account?' : 'Har du allerede en konto?')
+            : (isEn ? "Don't have an account?" : 'Har du ikke en konto?')
+          }
           <button type="button" onClick={() => setIsSignUp(!isSignUp)}>
-            {isSignUp ? 'Sign in' : 'Sign up'}
+            {isSignUp ? (isEn ? 'Sign in' : 'Log ind') : (isEn ? 'Sign up' : 'Opret konto')}
           </button>
         </div>
       </div>

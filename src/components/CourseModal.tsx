@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import type { Course, SharedCalendar } from '../types/database'
+import type { Language } from '../lib/dates'
 import { useBottomSheetDismiss } from '../hooks/useBottomSheetDismiss'
 import './EventModal.css'
 import './ShareSection.css'
@@ -15,6 +16,7 @@ interface CourseModalProps {
   onToggleShare?: (shareId: string, isActive: boolean) => Promise<SharedCalendar>
   onSubscribeToShareLive?: (token: string) => Promise<Course>
   onSubscribeToShareCopy?: (token: string) => Promise<Course>
+  language?: Language
 }
 
 const COLORS = [
@@ -35,7 +37,8 @@ export function CourseModal({
   onCreateShare,
   onToggleShare,
   onSubscribeToShareLive,
-  onSubscribeToShareCopy
+  onSubscribeToShareCopy,
+  language = 'da'
 }: CourseModalProps) {
   const [name, setName] = useState('')
   const [color, setColor] = useState(COLORS[0])
@@ -48,6 +51,7 @@ export function CourseModal({
   const [subscribeError, setSubscribeError] = useState<string | null>(null)
   const [subscribeMode, setSubscribeMode] = useState<SubscribeMode>('live')
 
+  const isEn = language === 'en'
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
   useEffect(() => {
@@ -87,8 +91,8 @@ export function CourseModal({
   const handleDelete = () => {
     if (!onDelete) return
     const msg = editingCourse?.isSubscribed
-      ? 'Unsubscribe from this course?'
-      : 'Delete this course and all its events?'
+      ? (isEn ? 'Unsubscribe from this course?' : 'Afmeld dette kursus?')
+      : (isEn ? 'Delete this course and all its events?' : 'Slet dette kursus og alle dets begivenheder?')
     if (confirm(msg)) {
       onDelete()
       onClose()
@@ -121,7 +125,7 @@ export function CourseModal({
       }
       onClose()
     } catch (err) {
-      setSubscribeError(err instanceof Error ? err.message : 'Failed to subscribe')
+      setSubscribeError(err instanceof Error ? err.message : (isEn ? 'Failed to subscribe' : 'Kunne ikke abonnere'))
     } finally {
       setSubscribeLoading(false)
     }
@@ -179,15 +183,15 @@ export function CourseModal({
     return (
       <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
         <div ref={sheetRef} className="modal-content" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
-          <h3>Subscribed Course</h3>
+          <h3>{isEn ? 'Subscribed Course' : 'Abonneret kursus'}</h3>
 
           <div className="form-group">
-            <label>Name</label>
+            <label>{isEn ? 'Name' : 'Navn'}</label>
             <input type="text" value={editingCourse.name} readOnly disabled />
           </div>
 
           <div className="form-group">
-            <label>Color</label>
+            <label>{isEn ? 'Color' : 'Farve'}</label>
             <div className="color-picker">
               <span
                 className="color-option selected"
@@ -196,14 +200,14 @@ export function CourseModal({
             </div>
           </div>
 
-          <p className="subscribed-notice">This course is live-synced and read-only.</p>
+          <p className="subscribed-notice">{isEn ? 'This course is live-synced and read-only.' : 'Dette kursus er live-synkroniseret og skrivebeskyttet.'}</p>
 
           <div className="modal-actions">
             <button type="button" className="delete-btn" onClick={handleDelete}>
-              Unsubscribe
+              {isEn ? 'Unsubscribe' : 'Afmeld'}
             </button>
             <div className="right-actions">
-              <button type="button" onClick={onClose}>Close</button>
+              <button type="button" onClick={onClose}>{isEn ? 'Close' : 'Luk'}</button>
             </div>
           </div>
         </div>
@@ -216,20 +220,20 @@ export function CourseModal({
     return (
       <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
         <div ref={sheetRef} className="modal-content" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
-          <h3>Edit Course</h3>
+          <h3>{isEn ? 'Edit Course' : 'Rediger kursus'}</h3>
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Name</label>
+              <label>{isEn ? 'Name' : 'Navn'}</label>
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="e.g., Algorithms"
+                placeholder={isEn ? 'e.g., Algorithms' : 'f.eks., Algoritmer'}
               />
             </div>
 
             <div className="form-group">
-              <label>Color</label>
+              <label>{isEn ? 'Color' : 'Farve'}</label>
               <div className="color-picker">
                 {COLORS.map(c => (
                   <button
@@ -245,7 +249,7 @@ export function CourseModal({
 
             {onCreateShare && (
               <div className="share-section">
-                <label className="share-label">Share</label>
+                <label className="share-label">{isEn ? 'Share' : 'Deling'}</label>
                 {!share ? (
                   <button
                     type="button"
@@ -253,13 +257,13 @@ export function CourseModal({
                     onClick={handleEnableShare}
                     disabled={shareLoading}
                   >
-                    {shareLoading ? 'Creating...' : 'Enable sharing'}
+                    {shareLoading ? (isEn ? 'Creating...' : 'Opretter...') : (isEn ? 'Enable sharing' : 'Aktiv\u00e9r deling')}
                   </button>
                 ) : (
                   <div className="share-details">
                     <div className="share-toggle-row">
                       <span className="share-status">
-                        {share.is_active ? 'Active' : 'Inactive'}
+                        {share.is_active ? (isEn ? 'Active' : 'Aktiv') : (isEn ? 'Inactive' : 'Inaktiv')}
                       </span>
                       <button
                         type="button"
@@ -267,17 +271,17 @@ export function CourseModal({
                         onClick={handleToggleShare}
                         disabled={shareLoading}
                       >
-                        {share.is_active ? 'Deactivate' : 'Activate'}
+                        {share.is_active ? (isEn ? 'Deactivate' : 'Deaktiv\u00e9r') : (isEn ? 'Activate' : 'Aktiv\u00e9r')}
                       </button>
                     </div>
                     {share.is_active && (
                       <div className="share-urls">
                         <div className="share-url-group">
-                          <span className="share-url-label">Subscribe page</span>
+                          <span className="share-url-label">{isEn ? 'Subscribe page' : 'Abonnementsside'}</span>
                           <div className="share-url-row">
                             <input type="text" readOnly value={subscribeUrl} className="share-url-input" />
                             <button type="button" className="share-copy-btn" onClick={() => handleCopy(subscribeUrl, 'subscribe')}>
-                              {copied === 'subscribe' ? 'Copied' : 'Copy'}
+                              {copied === 'subscribe' ? (isEn ? 'Copied' : 'Kopieret') : (isEn ? 'Copy' : 'Kopi\u00e9r')}
                             </button>
                           </div>
                         </div>
@@ -286,7 +290,7 @@ export function CourseModal({
                           <div className="share-url-row">
                             <input type="text" readOnly value={icalUrl} className="share-url-input" />
                             <button type="button" className="share-copy-btn" onClick={() => handleCopy(icalUrl, 'ical')}>
-                              {copied === 'ical' ? 'Copied' : 'Copy'}
+                              {copied === 'ical' ? (isEn ? 'Copied' : 'Kopieret') : (isEn ? 'Copy' : 'Kopi\u00e9r')}
                             </button>
                           </div>
                         </div>
@@ -300,12 +304,12 @@ export function CourseModal({
             <div className="modal-actions">
               {onDelete && (
                 <button type="button" className="delete-btn" onClick={handleDelete}>
-                  Delete
+                  {isEn ? 'Delete' : 'Slet'}
                 </button>
               )}
               <div className="right-actions">
-                <button type="button" onClick={onClose}>Cancel</button>
-                <button type="submit" className="save-btn">Save</button>
+                <button type="button" onClick={onClose}>{isEn ? 'Cancel' : 'Annuller'}</button>
+                <button type="submit" className="save-btn">{isEn ? 'Save' : 'Gem'}</button>
               </div>
             </div>
           </form>
@@ -318,7 +322,7 @@ export function CourseModal({
   return (
     <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
       <div ref={sheetRef} className="modal-content" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
-        <h3>Add Course</h3>
+        <h3>{isEn ? 'Add Course' : 'Tilf\u00f8j kursus'}</h3>
 
         <div className="course-modal-tabs">
           <button
@@ -326,32 +330,32 @@ export function CourseModal({
             className={`course-modal-tab ${tab === 'create' ? 'active' : ''}`}
             onClick={() => setTab('create')}
           >
-            New course
+            {isEn ? 'New course' : 'Nyt kursus'}
           </button>
           <button
             type="button"
             className={`course-modal-tab ${tab === 'subscribe' ? 'active' : ''}`}
             onClick={() => setTab('subscribe')}
           >
-            From share link
+            {isEn ? 'From share link' : 'Fra delingslink'}
           </button>
         </div>
 
         {tab === 'create' ? (
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label>Name</label>
+              <label>{isEn ? 'Name' : 'Navn'}</label>
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                placeholder="e.g., Algorithms"
+                placeholder={isEn ? 'e.g., Algorithms' : 'f.eks., Algoritmer'}
                 autoFocus
               />
             </div>
 
             <div className="form-group">
-              <label>Color</label>
+              <label>{isEn ? 'Color' : 'Farve'}</label>
               <div className="color-picker">
                 {COLORS.map(c => (
                   <button
@@ -367,20 +371,20 @@ export function CourseModal({
 
             <div className="modal-actions">
               <div className="right-actions">
-                <button type="button" onClick={onClose}>Cancel</button>
-                <button type="submit" className="save-btn">Create</button>
+                <button type="button" onClick={onClose}>{isEn ? 'Cancel' : 'Annuller'}</button>
+                <button type="submit" className="save-btn">{isEn ? 'Create' : 'Opret'}</button>
               </div>
             </div>
           </form>
         ) : (
           <form onSubmit={handleSubscribe}>
             <div className="form-group">
-              <label>Share link or token</label>
+              <label>{isEn ? 'Share link or token' : 'Delingslink eller token'}</label>
               <input
                 type="text"
                 value={shareUrl}
                 onChange={e => { setShareUrl(e.target.value); setSubscribeError(null) }}
-                placeholder="Paste a share link..."
+                placeholder={isEn ? 'Paste a share link...' : 'Inds\u00e6t et delingslink...'}
                 autoFocus
               />
             </div>
@@ -395,8 +399,8 @@ export function CourseModal({
                   onChange={() => setSubscribeMode('live')}
                 />
                 <div className="subscribe-mode-label">
-                  <span className="subscribe-mode-title">Live sync</span>
-                  <span className="subscribe-mode-desc">See updates automatically. Read-only.</span>
+                  <span className="subscribe-mode-title">{isEn ? 'Live sync' : 'Live-synkronisering'}</span>
+                  <span className="subscribe-mode-desc">{isEn ? 'See updates automatically. Read-only.' : 'Se opdateringer automatisk. Skrivebeskyttet.'}</span>
                 </div>
               </label>
               <label className="subscribe-mode-option">
@@ -408,8 +412,8 @@ export function CourseModal({
                   onChange={() => setSubscribeMode('copy')}
                 />
                 <div className="subscribe-mode-label">
-                  <span className="subscribe-mode-title">Copy</span>
-                  <span className="subscribe-mode-desc">Create your own editable copy. No sync.</span>
+                  <span className="subscribe-mode-title">{isEn ? 'Copy' : 'Kopi'}</span>
+                  <span className="subscribe-mode-desc">{isEn ? 'Create your own editable copy. No sync.' : 'Opret din egen redigerbare kopi. Ingen synkronisering.'}</span>
                 </div>
               </label>
             </div>
@@ -420,9 +424,9 @@ export function CourseModal({
 
             <div className="modal-actions">
               <div className="right-actions">
-                <button type="button" onClick={onClose}>Cancel</button>
+                <button type="button" onClick={onClose}>{isEn ? 'Cancel' : 'Annuller'}</button>
                 <button type="submit" className="save-btn" disabled={subscribeLoading || !shareUrl.trim()}>
-                  {subscribeLoading ? 'Importing...' : subscribeMode === 'live' ? 'Subscribe' : 'Import'}
+                  {subscribeLoading ? (isEn ? 'Importing...' : 'Importerer...') : subscribeMode === 'live' ? (isEn ? 'Subscribe' : 'Abonner') : (isEn ? 'Import' : 'Import\u00e9r')}
                 </button>
               </div>
             </div>
