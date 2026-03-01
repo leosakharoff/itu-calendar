@@ -3,13 +3,13 @@ import type { Language } from '../lib/dates'
 import { useBottomSheetDismiss } from '../hooks/useBottomSheetDismiss'
 import './EventDetailModal.css'
 
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  lecture: 'Lecture',
-  deliverable: 'Deliverable',
-  exam: 'Exam',
-  presentation: 'Presentation',
-  meeting: 'Meeting',
-  holiday: 'Holiday'
+const EVENT_TYPE_LABELS: Record<string, { da: string; en: string }> = {
+  lecture: { da: 'Forel\u00e6sning', en: 'Lecture' },
+  deliverable: { da: 'Aflevering', en: 'Deliverable' },
+  exam: { da: 'Eksamen', en: 'Exam' },
+  presentation: { da: 'Pr\u00e6sentation', en: 'Presentation' },
+  meeting: { da: 'M\u00f8de', en: 'Meeting' },
+  holiday: { da: 'Helligdag', en: 'Holiday' }
 }
 
 interface EventDetailModalProps {
@@ -39,12 +39,15 @@ export function EventDetailModal({ isOpen, onClose, event, courses, isSubscribed
     year: 'numeric'
   })
 
+  const typeLabel = EVENT_TYPE_LABELS[event.type]
+  const typeLabelStr = typeLabel ? (isEn ? typeLabel.en : typeLabel.da) : event.type
+
   return (
     <div className="modal-overlay" onClick={onClose} style={isDragging ? { background: `rgba(0, 0, 0, ${overlayOpacity})` } : undefined}>
       <div ref={sheetRef} className="modal-content event-detail-modal" onClick={e => e.stopPropagation()} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} style={sheetStyle}>
         <div className="event-detail-header">
           <h3>{event.title}</h3>
-          <span className={`event-detail-type ${event.type}`}>{EVENT_TYPE_LABELS[event.type] || event.type}</span>
+          <span className={`event-detail-type ${event.type}`}>{typeLabelStr}</span>
         </div>
 
         <div className="event-detail-date">{dateStr}</div>
