@@ -17,11 +17,7 @@ export function useNotificationSettings(userId: string | undefined) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!userId) {
-      setSettings(null)
-      setLoading(false)
-      return
-    }
+    if (!userId) return
 
     let cancelled = false
 
