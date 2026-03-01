@@ -47,6 +47,11 @@
   background: rgba(156, 39, 176, 0.1);
 }
 
+.event-detail-type.meeting {
+  color: #00897b;
+  background: rgba(0, 150, 136, 0.1);
+}
+
 .event-detail-type.holiday {
   color: #e65100;
   background: rgba(255, 152, 0, 0.1);

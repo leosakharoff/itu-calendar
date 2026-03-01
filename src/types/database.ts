@@ -1,4 +1,4 @@
-export type EventType = 'lecture' | 'deliverable' | 'exam' | 'presentation' | 'holiday'
+export type EventType = 'lecture' | 'deliverable' | 'exam' | 'presentation' | 'meeting' | 'holiday'
 
 export interface Course {
   id: string

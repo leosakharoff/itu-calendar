@@ -8,6 +8,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   deliverable: 'Deliverable',
   exam: 'Exam',
   presentation: 'Presentation',
+  meeting: 'Meeting',
   holiday: 'Holiday'
 }
 
