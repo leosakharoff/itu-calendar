@@ -292,7 +292,7 @@ function MainApp() {
           isOpen={profileModalOpen}
           onClose={() => setProfileModalOpen(false)}
           user={user}
-          onSignOut={signOut}
+          onSignOut={() => { setProfileModalOpen(false); signOut() }}
           onUpdateProfile={updateProfile}
           onUpdateEmail={updateEmail}
           onUpdatePassword={updatePassword}
