@@ -8,9 +8,10 @@ interface SettingsModalProps {
   settings: UserSettings
   onOpenCalendarSettings: () => void
   onOpenNotifications: () => void
+  onOpenAbout: () => void
 }
 
-export function SettingsModal({ isOpen, onClose, settings, onOpenCalendarSettings, onOpenNotifications }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, settings, onOpenCalendarSettings, onOpenNotifications, onOpenAbout }: SettingsModalProps) {
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
   if (!isOpen) return null
@@ -29,6 +30,11 @@ export function SettingsModal({ isOpen, onClose, settings, onOpenCalendarSetting
 
         <div className="settings-modal-row settings-modal-link" onClick={() => { onClose(); onOpenNotifications() }}>
           <span className="settings-modal-label">{isEn ? 'Notifications' : 'Notifikationer'}</span>
+          <span className="settings-modal-chevron">&rsaquo;</span>
+        </div>
+
+        <div className="settings-modal-row settings-modal-link" onClick={() => { onClose(); onOpenAbout() }}>
+          <span className="settings-modal-label">{isEn ? 'About' : 'Om'}</span>
           <span className="settings-modal-chevron">&rsaquo;</span>
         </div>
 
