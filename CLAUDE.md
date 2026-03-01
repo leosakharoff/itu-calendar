@@ -3,19 +3,18 @@
 ## Deployment
 
 **Platform:** Cloudflare Pages
-**Project name:** `itu-cal`
-**Live URLs:**
-- https://itucal.dk (primary)
-- https://itu-cal.pages.dev
 
-### Automatic Deployment
-Pushes to `main` trigger GitHub Actions workflow (`.github/workflows/deploy.yml`) which deploys to Cloudflare Pages automatically.
+| Environment | Branch | Project | URL |
+|-------------|--------|---------|-----|
+| Production | `main` | `itu-cal` | https://itucal.dk |
+| Staging | `develop` | `itu-cal-dev` | https://dev.itucal.dk |
 
-### Manual Deployment
-```bash
-npm run build
-npx wrangler pages deploy dist --project-name=itu-cal
-```
+### Branching & CI
+- **`main`** = production. Merges trigger deploy to itucal.dk.
+- **`develop`** = staging. Merges trigger deploy to dev.itucal.dk.
+- **Feature branches** are created from `develop`, merged back via PR.
+- All PRs run CI (`.github/workflows/ci.yml`): lint, type-check, test, build.
+- Both branches have branch protection: PRs required, `ci` status check must pass.
 
 ## Tech Stack
 - React 19 + TypeScript
