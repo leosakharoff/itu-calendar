@@ -1,73 +1,62 @@
-# React + TypeScript + Vite
+# ITU Calendar
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A semester calendar for IT University of Copenhagen students. Track lectures, deadlines, exams, presentations, and more across your courses.
 
-Currently, two official plugins are available:
+**Live:** [itucal.dk](https://itucal.dk) | **Staging:** [dev.itucal.dk](https://dev.itucal.dk)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+- Multi-course calendar with color-coded event dots
+- Event types: lecture, deliverable, exam, presentation, meeting, holiday
+- Drag-and-drop event rescheduling (desktop + mobile long-press)
+- Course sharing via invite links (copy or live sync)
+- Discord and email notifications for upcoming events
+- Installable PWA with offline support
+- Danish and English language support
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- **Frontend:** React 19, TypeScript, Vite
+- **Database:** Supabase (PostgreSQL + Auth)
+- **Hosting:** Cloudflare Pages
+- **PWA:** vite-plugin-pwa with NetworkFirst caching
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Development
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Scripts
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server |
+| `npm run build` | Type-check + production build |
+| `npm run lint` | Run ESLint |
+| `npm test` | Run tests (Vitest) |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Environment Variables
+
+Create a `.env.local` with your Supabase credentials:
+
 ```
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key
+```
+
+## Deployment
+
+Deployed via Cloudflare Pages with automatic builds on push.
+
+| Environment | Branch | URL |
+|-------------|--------|-----|
+| Production | `main` | [itucal.dk](https://itucal.dk) |
+| Staging | `develop` | [dev.itucal.dk](https://dev.itucal.dk) |
+
+Feature branches are created from `develop` and merged back via PR. All PRs run CI (lint, type-check, test, build).
+
+## Database
+
+Supabase with PostgreSQL. Schema migrations live in `supabase/migrations/`. Key tables: `courses`, `events`, `shared_calendars`, `subscriptions`, `notification_settings`, `user_settings`.

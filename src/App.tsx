@@ -8,6 +8,7 @@ import { ProfileModal, getInitials } from './components/ProfileModal'
 import { SettingsModal } from './components/SettingsModal'
 import { CalendarSettingsModal } from './components/CalendarSettingsModal'
 import { NotificationSettingsModal } from './components/NotificationSettingsModal'
+import { AboutModal } from './components/AboutModal'
 import { ShareModal } from './components/ShareModal'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { LoginPage } from './components/LoginPage'
@@ -52,6 +53,7 @@ function MainApp() {
   const [shareModalOpen, setShareModalOpen] = useState(false)
   const [calendarSettingsOpen, setCalendarSettingsOpen] = useState(false)
   const [notificationSettingsOpen, setNotificationSettingsOpen] = useState(false)
+  const [aboutModalOpen, setAboutModalOpen] = useState(false)
   const [monthPairLabel, setMonthPairLabel] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | undefined>()
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
@@ -300,6 +302,7 @@ function MainApp() {
             settings={settings}
             onOpenCalendarSettings={() => setCalendarSettingsOpen(true)}
             onOpenNotifications={() => setNotificationSettingsOpen(true)}
+            onOpenAbout={() => setAboutModalOpen(true)}
           />
           <CalendarSettingsModal
             isOpen={calendarSettingsOpen}
@@ -331,6 +334,13 @@ function MainApp() {
         onTestWebhook={testDiscordWebhook}
         onTestEmail={testEmail}
         userEmail={user?.email}
+        language={settings?.language}
+      />
+
+      <AboutModal
+        isOpen={aboutModalOpen}
+        onClose={() => setAboutModalOpen(false)}
+        onBack={() => setSettingsModalOpen(true)}
         language={settings?.language}
       />
 
