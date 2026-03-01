@@ -142,6 +142,10 @@
   border: 1.5px solid var(--course-color, #4CAF50);
 }
 
+.event-dot.meeting {
+  background-color: var(--course-color, #00897b);
+}
+
 .event-item {
   display: flex;
   align-items: center;

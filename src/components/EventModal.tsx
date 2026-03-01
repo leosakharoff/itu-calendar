@@ -19,6 +19,7 @@ const EVENT_TYPES: { value: EventType; label: string }[] = [
   { value: 'deliverable', label: 'Deliverable' },
   { value: 'exam', label: 'Exam' },
   { value: 'presentation', label: 'Presentation' },
+  { value: 'meeting', label: 'Meeting' },
   { value: 'holiday', label: 'Holiday' }
 ]
 

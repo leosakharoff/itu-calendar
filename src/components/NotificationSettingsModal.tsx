@@ -4,13 +4,14 @@ import type { Language } from '../lib/dates'
 import { useBottomSheetDismiss } from '../hooks/useBottomSheetDismiss'
 import './NotificationSettingsModal.css'
 
-const ALL_EVENT_TYPES: EventType[] = ['lecture', 'deliverable', 'exam', 'presentation', 'holiday']
+const ALL_EVENT_TYPES: EventType[] = ['lecture', 'deliverable', 'exam', 'presentation', 'meeting', 'holiday']
 
 const EVENT_TYPE_LABELS: Record<EventType, { da: string; en: string }> = {
   lecture: { da: 'Forel\u00e6sninger', en: 'Lectures' },
   deliverable: { da: 'Afleveringer', en: 'Deliverables' },
   exam: { da: 'Eksamener', en: 'Exams' },
   presentation: { da: 'Pr\u00e6sentationer', en: 'Presentations' },
+  meeting: { da: 'Møder', en: 'Meetings' },
   holiday: { da: 'Helligdage', en: 'Holidays' },
 }
 

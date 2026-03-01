@@ -84,9 +84,10 @@ function MonthColumn({ month, events, courses, activeCourseIds, todayStr, onDayC
           const eventTypeOrder: Record<string, number> = {
             holiday: 0,
             lecture: 1,
-            presentation: 2,
-            exam: 3,
-            deliverable: 4
+            meeting: 2,
+            presentation: 3,
+            exam: 4,
+            deliverable: 5
           }
           const dayEvents = monthEvents
             .filter(e => e.date === dayDateStr)
