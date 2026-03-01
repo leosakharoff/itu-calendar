@@ -67,7 +67,7 @@ export function CourseModal({
       setSubscribeMode('live')
     }
     setCopied(null)
-  }, [editingCourse, isOpen])
+  }, [editingCourse, isOpen, onGetShare])
 
   if (!isOpen) return null
 
