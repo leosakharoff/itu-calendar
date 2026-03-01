@@ -17,6 +17,8 @@ export function SubscribeView({ token }: SubscribeViewProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const isEn = navigator.language.startsWith('en')
+
   useEffect(() => {
     async function fetchShareData() {
       try {
@@ -29,13 +31,13 @@ export function SubscribeView({ token }: SubscribeViewProps) {
           .single()
 
         if (shareError || !share) {
-          setError('This share link is invalid or has been deactivated.')
+          setError(isEn ? 'This share link is invalid or has been deactivated.' : 'Dette delingslink er ugyldigt eller er blevet deaktiveret.')
           return
         }
 
         const course = share.courses as Course
         if (!course) {
-          setError('Course not found.')
+          setError(isEn ? 'Course not found.' : 'Kursus ikke fundet.')
           return
         }
 
@@ -47,20 +49,20 @@ export function SubscribeView({ token }: SubscribeViewProps) {
           .order('date')
 
         if (eventsError) {
-          setError('Failed to load events.')
+          setError(isEn ? 'Failed to load events.' : 'Kunne ikke indl\u00e6se begivenheder.')
           return
         }
 
         setData({ course, events: events || [] })
       } catch {
-        setError('Something went wrong.')
+        setError(isEn ? 'Something went wrong.' : 'Noget gik galt.')
       } finally {
         setLoading(false)
       }
     }
 
     fetchShareData()
-  }, [token])
+  }, [token, isEn])
 
   if (loading) {
     return (
@@ -78,7 +80,7 @@ export function SubscribeView({ token }: SubscribeViewProps) {
         <div className="subscribe-container">
           <h1>ITU Calendar</h1>
           <p className="subscribe-error">{error}</p>
-          <a href="/" className="subscribe-home-link">Go to ITU Calendar</a>
+          <a href="/" className="subscribe-home-link">{isEn ? 'Go to ITU Calendar' : 'G\u00e5 til ITU Calendar'}</a>
         </div>
       </div>
     )
@@ -89,13 +91,19 @@ export function SubscribeView({ token }: SubscribeViewProps) {
   const webcalUrl = icalUrl.replace(/^https?:\/\//, 'webcal://')
   const googleCalUrl = `https://calendar.google.com/calendar/r?cid=${encodeURIComponent(icalUrl)}`
 
-  const eventTypeLabels: Record<string, string> = {
-    lecture: 'Lecture',
-    deliverable: 'Deliverable',
-    exam: 'Exam',
-    presentation: 'Presentation',
-    holiday: 'Holiday'
+  const eventTypeLabels: Record<string, { da: string; en: string }> = {
+    lecture: { da: 'Forel\u00e6sning', en: 'Lecture' },
+    deliverable: { da: 'Aflevering', en: 'Deliverable' },
+    exam: { da: 'Eksamen', en: 'Exam' },
+    presentation: { da: 'Pr\u00e6sentation', en: 'Presentation' },
+    meeting: { da: 'M\u00f8de', en: 'Meeting' },
+    holiday: { da: 'Helligdag', en: 'Holiday' }
   }
+
+  const eventCount = data.events.length
+  const subtitle = isEn
+    ? `${eventCount} event${eventCount !== 1 ? 's' : ''} shared from ITU Calendar`
+    : `${eventCount} begivenhed${eventCount !== 1 ? 'er' : ''} delt fra ITU Calendar`
 
   return (
     <div className="subscribe-page">
@@ -107,40 +115,41 @@ export function SubscribeView({ token }: SubscribeViewProps) {
           />
           <h1>{data.course.name}</h1>
         </div>
-        <p className="subscribe-subtitle">
-          {data.events.length} event{data.events.length !== 1 ? 's' : ''} shared from ITU Calendar
-        </p>
+        <p className="subscribe-subtitle">{subtitle}</p>
 
         <div className="subscribe-actions">
           <a href={webcalUrl} className="subscribe-btn subscribe-btn-primary">
-            Subscribe in Apple Calendar
+            {isEn ? 'Subscribe in Apple Calendar' : 'Abonner i Apple Kalender'}
           </a>
           <a href={googleCalUrl} target="_blank" rel="noopener noreferrer" className="subscribe-btn subscribe-btn-secondary">
-            Subscribe in Google Calendar
+            {isEn ? 'Subscribe in Google Calendar' : 'Abonner i Google Kalender'}
           </a>
           <a href="/" className="subscribe-btn subscribe-btn-tertiary">
-            Open in ITU Calendar
+            {isEn ? 'Open in ITU Calendar' : '\u00c5bn i ITU Calendar'}
           </a>
         </div>
 
         <div className="subscribe-events">
-          <h2>Events</h2>
+          <h2>{isEn ? 'Events' : 'Begivenheder'}</h2>
           <div className="subscribe-event-list">
-            {data.events.map(event => (
-              <div key={event.id} className="subscribe-event-item">
-                <span
-                  className="subscribe-event-dot"
-                  style={{ backgroundColor: data.course.color }}
-                />
-                <span className="subscribe-event-date">
-                  {formatDate(event.date)}
-                </span>
-                <span className="subscribe-event-title">{event.title}</span>
-                <span className="subscribe-event-type">
-                  {eventTypeLabels[event.type] || event.type}
-                </span>
-              </div>
-            ))}
+            {data.events.map(event => {
+              const typeLabel = eventTypeLabels[event.type]
+              return (
+                <div key={event.id} className="subscribe-event-item">
+                  <span
+                    className="subscribe-event-dot"
+                    style={{ backgroundColor: data.course.color }}
+                  />
+                  <span className="subscribe-event-date">
+                    {formatDate(event.date, isEn)}
+                  </span>
+                  <span className="subscribe-event-title">{event.title}</span>
+                  <span className="subscribe-event-type">
+                    {typeLabel ? (isEn ? typeLabel.en : typeLabel.da) : event.type}
+                  </span>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -148,7 +157,7 @@ export function SubscribeView({ token }: SubscribeViewProps) {
   )
 }
 
-function formatDate(dateStr: string): string {
+function formatDate(dateStr: string, isEn: boolean): string {
   const date = new Date(dateStr + 'T00:00:00')
-  return date.toLocaleDateString('en-DK', { month: 'short', day: 'numeric' })
+  return date.toLocaleDateString(isEn ? 'en-GB' : 'da-DK', { month: 'short', day: 'numeric' })
 }

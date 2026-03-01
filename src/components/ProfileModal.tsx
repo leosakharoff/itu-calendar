@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { User } from '@supabase/supabase-js'
+import type { Language } from '../lib/dates'
 import { supabase } from '../lib/supabase'
 import { useBottomSheetDismiss } from '../hooks/useBottomSheetDismiss'
 import './ProfileModal.css'
@@ -12,6 +13,7 @@ interface ProfileModalProps {
   onUpdateProfile: (data: { displayName?: string; avatarUrl?: string }) => Promise<void>
   onUpdateEmail: (email: string) => Promise<void>
   onUpdatePassword: (password: string) => Promise<void>
+  language?: Language
 }
 
 function getInitials(user: User): string {
@@ -31,7 +33,8 @@ export function ProfileModal({
   onSignOut,
   onUpdateProfile,
   onUpdateEmail,
-  onUpdatePassword
+  onUpdatePassword,
+  language = 'da'
 }: ProfileModalProps) {
   const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
@@ -43,6 +46,7 @@ export function ProfileModal({
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  const isEn = language === 'en'
   const { sheetRef, handleTouchStart, handleTouchMove, handleTouchEnd, isDragging, overlayOpacity, sheetStyle } = useBottomSheetDismiss(isOpen, onClose)
 
   useEffect(() => {
@@ -65,11 +69,11 @@ export function ProfileModal({
     if (!file) return
 
     if (!file.type.startsWith('image/')) {
-      setMessage({ type: 'error', text: 'Please select an image file.' })
+      setMessage({ type: 'error', text: isEn ? 'Please select an image file.' : 'V\u00e6lg venligst en billedfil.' })
       return
     }
     if (file.size > 2 * 1024 * 1024) {
-      setMessage({ type: 'error', text: 'Image must be under 2MB.' })
+      setMessage({ type: 'error', text: isEn ? 'Image must be under 2MB.' : 'Billedet skal v\u00e6re under 2MB.' })
       return
     }
 
@@ -90,9 +94,9 @@ export function ProfileModal({
       const url = `${publicUrl}?t=${Date.now()}`
       await onUpdateProfile({ avatarUrl: url })
       setAvatarUrl(url)
-      setMessage({ type: 'success', text: 'Avatar updated.' })
+      setMessage({ type: 'success', text: isEn ? 'Avatar updated.' : 'Avatar opdateret.' })
     } catch (err) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to upload avatar.' })
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : (isEn ? 'Failed to upload avatar.' : 'Kunne ikke uploade avatar.') })
     }
     setUploading(false)
     // Reset input so re-selecting the same file triggers onChange
@@ -113,15 +117,15 @@ export function ProfileModal({
       }
       if (emailChanged) {
         await onUpdateEmail(email)
-        setMessage({ type: 'success', text: 'Check your new email for a confirmation link.' })
+        setMessage({ type: 'success', text: isEn ? 'Check your new email for a confirmation link.' : 'Tjek din nye email for et bekr\u00e6ftelseslink.' })
         setSaving(false)
         return
       }
       if (nameChanged) {
-        setMessage({ type: 'success', text: 'Profile updated.' })
+        setMessage({ type: 'success', text: isEn ? 'Profile updated.' : 'Profil opdateret.' })
       }
     } catch (err) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to update profile.' })
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : (isEn ? 'Failed to update profile.' : 'Kunne ikke opdatere profil.') })
     }
     setSaving(false)
   }
@@ -129,11 +133,11 @@ export function ProfileModal({
   const handleChangePassword = async () => {
     if (!newPassword) return
     if (newPassword !== confirmPassword) {
-      setMessage({ type: 'error', text: 'Passwords do not match.' })
+      setMessage({ type: 'error', text: isEn ? 'Passwords do not match.' : 'Adgangskoderne matcher ikke.' })
       return
     }
     if (newPassword.length < 6) {
-      setMessage({ type: 'error', text: 'Password must be at least 6 characters.' })
+      setMessage({ type: 'error', text: isEn ? 'Password must be at least 6 characters.' : 'Adgangskoden skal v\u00e6re mindst 6 tegn.' })
       return
     }
     setSaving(true)
@@ -142,9 +146,9 @@ export function ProfileModal({
       await onUpdatePassword(newPassword)
       setNewPassword('')
       setConfirmPassword('')
-      setMessage({ type: 'success', text: 'Password updated.' })
+      setMessage({ type: 'success', text: isEn ? 'Password updated.' : 'Adgangskode opdateret.' })
     } catch (err) {
-      setMessage({ type: 'error', text: err instanceof Error ? err.message : 'Failed to update password.' })
+      setMessage({ type: 'error', text: err instanceof Error ? err.message : (isEn ? 'Failed to update password.' : 'Kunne ikke opdatere adgangskode.') })
     }
     setSaving(false)
   }
@@ -164,14 +168,14 @@ export function ProfileModal({
         onTouchEnd={handleTouchEnd}
         style={sheetStyle}
       >
-        <h3>Profile</h3>
+        <h3>{isEn ? 'Profile' : 'Profil'}</h3>
 
         <div className="profile-avatar-section">
           <button
             className={`profile-avatar-large ${uploading ? 'uploading' : ''}`}
             onClick={handleAvatarClick}
             type="button"
-            aria-label="Change avatar"
+            aria-label={isEn ? 'Change avatar' : 'Skift avatar'}
           >
             {avatarUrl ? (
               <img src={avatarUrl} alt="" className="profile-avatar-img" />
@@ -201,12 +205,12 @@ export function ProfileModal({
         )}
 
         <div className="form-group">
-          <label>Display name</label>
+          <label>{isEn ? 'Display name' : 'Visningsnavn'}</label>
           <input
             type="text"
             value={displayName}
             onChange={e => setDisplayName(e.target.value)}
-            placeholder="Your name"
+            placeholder={isEn ? 'Your name' : 'Dit navn'}
           />
         </div>
 
@@ -225,29 +229,29 @@ export function ProfileModal({
             onClick={handleSaveProfile}
             disabled={saving}
           >
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? (isEn ? 'Saving...' : 'Gemmer...') : (isEn ? 'Save' : 'Gem')}
           </button>
         </div>
 
         <div className="profile-divider" />
 
         <div className="form-group">
-          <label>New password</label>
+          <label>{isEn ? 'New password' : 'Ny adgangskode'}</label>
           <input
             type="password"
             value={newPassword}
             onChange={e => setNewPassword(e.target.value)}
-            placeholder="New password"
+            placeholder={isEn ? 'New password' : 'Ny adgangskode'}
           />
         </div>
 
         <div className="form-group">
-          <label>Confirm password</label>
+          <label>{isEn ? 'Confirm password' : 'Bekr\u00e6ft adgangskode'}</label>
           <input
             type="password"
             value={confirmPassword}
             onChange={e => setConfirmPassword(e.target.value)}
-            placeholder="Confirm password"
+            placeholder={isEn ? 'Confirm password' : 'Bekr\u00e6ft adgangskode'}
           />
         </div>
 
@@ -257,14 +261,14 @@ export function ProfileModal({
             onClick={handleChangePassword}
             disabled={saving || !newPassword}
           >
-            Change password
+            {isEn ? 'Change password' : 'Skift adgangskode'}
           </button>
         </div>
 
         <div className="profile-divider" />
 
         <button className="profile-sign-out-btn" onClick={onSignOut}>
-          Sign out
+          {isEn ? 'Sign out' : 'Log ud'}
         </button>
       </div>
     </div>

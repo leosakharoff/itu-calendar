@@ -222,7 +222,7 @@ function MainApp() {
 
   return (
     <div className="app">
-      <OfflineIndicator />
+      <OfflineIndicator language={settings?.language} />
       <CourseFilter
         courses={courses}
         activeCourseIds={activeCourseIds}
@@ -284,6 +284,7 @@ function MainApp() {
         initialDate={selectedDate}
         editingEvent={editingEvent}
         hiddenEventTypes={settings?.hidden_event_types}
+        language={settings?.language}
       />
 
       {user && (
@@ -295,6 +296,7 @@ function MainApp() {
           onUpdateProfile={updateProfile}
           onUpdateEmail={updateEmail}
           onUpdatePassword={updatePassword}
+          language={settings?.language}
         />
       )}
 
@@ -376,6 +378,7 @@ function MainApp() {
           setActiveCourseIds(prev => new Set([...prev, course.id]))
           return course
         }}
+        language={settings?.language}
       />
     </div>
   )
